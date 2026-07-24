@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>求职岗位推进台｜2026届应届生</title>
+  <style>
+    :root{
+      --ink:#18221d;--muted:#67736c;--paper:#f4f7f4;--card:#fff;
+      --line:#dce5de;--green:#1d6b4d;--green2:#e8f4ed;--amber:#a56610;
+      --red:#a43d3d;--shadow:0 16px 42px rgba(35,56,44,.08);
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);
+      font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+    button,input,select,textarea{font:inherit} button{cursor:pointer}
+    .wrap{max-width:1480px;margin:auto;padding:30px 24px 60px}
+    .top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:22px}
+    .eyebrow{color:var(--green);font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+    h1{font-size:clamp(28px,4vw,48px);line-height:1.08;margin:8px 0 10px;letter-spacing:-.04em}
+    .lead{color:var(--muted);margin:0;max-width:760px;line-height:1.7}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .btn{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 14px;color:var(--ink);font-weight:700}
+    .btn.primary{background:var(--green);color:white;border-color:var(--green)}
+    .btn.danger{color:var(--red)}
+    .notice{background:#fff8e8;border:1px solid #eed9a4;border-radius:12px;padding:12px 16px;color:#735019;font-size:14px;margin-bottom:18px}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+    .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 18px;box-shadow:var(--shadow)}
+    .stat small{color:var(--muted);display:block;margin-bottom:8px}.stat strong{font-size:26px}.stat span{color:var(--muted);font-size:13px;margin-left:7px}
+    .toolbar{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;
+      grid-template-columns:minmax(220px,1fr) 160px 180px 150px;gap:10px;margin-bottom:14px}
+    .field{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:white;color:var(--ink);width:100%}
+    .table-card{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);overflow:hidden}
+    .scroll{overflow:auto}.jobs{border-collapse:separate;border-spacing:0;width:100%;min-width:1540px;table-layout:fixed}
+    .jobs th:nth-child(1){width:210px}.jobs th:nth-child(2){width:110px}.jobs th:nth-child(3){width:115px}
+    .jobs th:nth-child(4){width:135px}.jobs th:nth-child(5),.jobs th:nth-child(6){width:225px}
+    .jobs th:nth-child(7){width:90px}.jobs th:nth-child(8){width:105px}.jobs th:nth-child(9){width:125px}.jobs th:nth-child(10){width:105px}.jobs th:nth-child(11){width:190px}
+    th{position:sticky;top:0;z-index:1;background:#edf3ef;color:#536159;text-align:left;padding:12px 11px;font-size:12px;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+    td{padding:14px 11px;border-bottom:1px solid #edf1ee;vertical-align:top;font-size:14px}
+    tbody tr:hover{background:#fbfdfb} tbody tr.deleted{opacity:.58;background:#f5f5f5}.company{font-weight:800}.role{color:var(--green);font-weight:800;margin-top:4px}
+    .minor{color:var(--muted);font-size:12px;margin-top:5px}.stars{color:#d48a16;white-space:nowrap}
+    .badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800;background:var(--green2);color:var(--green)}
+    .badge.done{background:#eaf0ff;color:#3459a6}.badge.sent{background:#fff1d8;color:#8b5a0d}
+    .link{color:var(--green);font-weight:800;text-decoration:none}.link:hover{text-decoration:underline}
+    .detail-btn{border:0;background:transparent;color:var(--green);font-weight:800;padding:2px 0}
+    .mini-list{margin:0;padding-left:17px;line-height:1.45;font-size:12px}.mini-list li+li{margin-top:5px}
+    .invalid-note{color:var(--red);font-weight:800;font-size:12px;margin-top:5px}
+    .empty{text-align:center;padding:48px;color:var(--muted)}
+    dialog{width:min(900px,calc(100% - 28px));max-height:88vh;border:0;border-radius:18px;padding:0;box-shadow:0 30px 90px rgba(18,34,25,.3)}
+    dialog::backdrop{background:rgba(21,31,25,.54)}.modal-head{padding:22px 24px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px}
+    .modal-head h2{margin:0;font-size:24px}.close{border:0;background:#edf3ef;width:36px;height:36px;border-radius:50%;font-size:20px}
+    .modal-body{padding:20px 24px 26px;overflow:auto}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .panel{border:1px solid var(--line);border-radius:12px;padding:15px}.panel h3{margin:0 0 9px;font-size:14px;color:var(--green)}
+    .panel ul{margin:0;padding-left:20px;line-height:1.65}.wide{grid-column:1/-1}
+    .edit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.edit-grid label{font-size:12px;color:var(--muted);font-weight:700}
+    .edit-grid .field{margin-top:6px}.span2{grid-column:span 2}.span3{grid-column:1/-1}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+    .foot{color:var(--muted);font-size:12px;line-height:1.7;margin-top:14px}
+    @media(max-width:760px){.wrap{padding:20px 14px 40px}.top{display:block}.actions{justify-content:flex-start;margin-top:16px}.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.detail-grid,.edit-grid{grid-template-columns:1fr}.span2,.span3,.wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Career Pipeline · 2026</div>
+      <h1>求职岗位推进台</h1>
+      <p class="lead">为天津农学院旅游管理专业应届毕业生建立的岗位筛选与投递记录。地域倾向：山东 ＞ 江苏 ＞ 安徽 ＞ 河南；岗位匹配度仍是排名的主要依据。</p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="exportBtn">导出数据</button>
+      <button class="btn primary" id="addBtn">＋ 新增岗位</button>
+    </div>
+  </header>
+  <div class="notice">每日检索目标：20个岗位，覆盖山东、江苏、安徽、河南（包含青岛）。严格核验：“已结束 / 已下线 / 停止招聘”优先级最高；只有当前可投岗位进入正式推荐。</div>
+  <section class="stats" id="stats"></section>
+  <section class="toolbar">
+    <input class="field" id="search" placeholder="搜索公司、岗位、城市或技能">
+    <select class="field" id="statusFilter"><option value="">全部状态</option><option>待投递</option><option>已投递</option><option>已完成</option></select>
+    <select class="field" id="cityFilter"><option value="">全部地区</option><option>山东</option><option>江苏</option><option>安徽</option><option>河南</option></select>
+    <button class="btn" id="historyBtn">展开历史岗位</button>
+  </section>
+  <section class="table-card">
+    <div class="scroll">
+      <table class="jobs">
+        <thead><tr>
+          <th>总排名 / 公司岗位</th><th>城市 / 薪资</th><th>来源 / 更新</th><th>关键技能</th><th>推荐原因</th><th>风险 / 不匹配项</th><th>匹配</th><th>状态</th><th>投递 / 操作</th><th>推荐 / 推进日期</th><th>简历突出方向</th>
+        </tr></thead>
+        <tbody id="jobRows"></tbody>
+      </table>
+    </div>
+  </section>
+  <p class="foot">分享说明：直接转发此 HTML 文件即可打开相同的初始岗位清单；你在浏览器中的修改属于本机数据。如需把最新修改交给别人，请点击“导出数据”。</p>
+</main>
+
+<dialog id="detailDialog"><div class="modal-head"><div><div class="eyebrow">岗位分析</div><h2 id="detailTitle"></h2></div><button class="close" onclick="detailDialog.close()">×</button></div><div class="modal-body" id="detailBody"></div></dialog>
+<dialog id="editDialog"><div class="modal-head"><div><div class="eyebrow">Pipeline Record</div><h2 id="editTitle">新增岗位</h2></div><button class="close" onclick="editDialog.close()">×</button></div><form class="modal-body" id="jobForm"><div class="edit-grid" id="editFields"></div><div class="modal-actions"><button type="button" class="btn" onclick="editDialog.close()">取消</button><button class="btn primary" type="submit">保存记录</button></div></form></dialog>
+
+<script>
+const KEY="careerPipelineV7";
+const seed=[
+ {id:"henan-shuotu-admin-20260724",company:"河南硕图教育科技有限公司",role:"行政文员（教育行业·不加班）",city:"河南·郑州",region:"河南",salary:"页面为准",source:"工作啦大学生直聘",url:"https://www.goworkla.cn/Position/PositionDetail?positionid=686cc3a6b86d17bbbc007575",publishDate:"2026-07-08发布·2026-07-24核验",recommendDate:"2026-07-24",skills:"行政文件、资料归档、Office、沟通协调、会议支持",resume:"突出Word/Excel/PPT熟练、责任心、服务意识；将酒店助理实习改写为资料整理、现场协调和客户沟通案例",reasons:["毕业生入职30天内签订劳动合同","页面明确次月缴纳五险","行政方向不限制旅游管理专业","不加班且工作节奏相对可控","沟通、服务意识和Office可直接迁移"],risks:["五险并非入职当日缴纳","页面未明确住房公积金","需确认是否双休","教培行业稳定性需核验","需确认岗位不承担招生或销售指标"],weaknesses:["缺少正式行政实习","文书写作案例不足","Excel高级功能需补强","需要解释跨专业求职动机","没有校园组织经历"],rating:5,matchScore:89,fit:"正式工作重点推荐",status:"待投递",progressDate:"2026-07-24",note:"有效投递页面；投递前书面确认无招生、电话营销或业绩指标，并确认休息制度。",deleted:false},
+ {id:"pingan-henan-ns-20260724",company:"中国平安人寿保险股份有限公司河南分公司",role:"NS管培生（经营分析）",city:"河南·郑州",region:"河南",salary:"公告为准",source:"河南农业大学就业信息",url:"https://gj.henau.edu.cn/index.php?c=show&id=2948",publishDate:"2026年校招·2026-07-24核验",recommendDate:"2026-07-24",skills:"经营分析、数据整理、报告撰写、跨部门沟通、Office",resume:"突出Excel数据整理、PPT汇报、责任心和沟通表达；准备一份酒店运营数据或服务改进分析案例",reasons:["面向2026届毕业生","入司即签订劳动合同","明确缴纳六险二金","经营分析属于职能岗而非保险销售","正式员工待遇与培养路径清晰"],risks:["保险行业需确认最终定岗","可能存在业务部门轮岗","对数据分析能力要求较高","竞争者可能具备金融统计背景","需确认不承担销售或代理人增员指标"],weaknesses:["专业不是金融或统计","缺少数据分析项目","英语四级未通过","实习时间较短","校园经历较少"],rating:4,matchScore:81,fit:"正式职能岗推荐",status:"待投递",progressDate:"2026-07-24",note:"仅推荐经营分析等内勤职能方向；如面试出现销售、组训、增员或业绩指标，立即退出。",deleted:false},
+ {id:"anhui-admin-service",company:"徐州珂旅商贸有限公司",role:"行政客服专员（双休）",city:"蚌埠",region:"安徽",salary:"4K–6K",source:"国家大学生就业服务平台",url:"https://job.ncss.cn/student/jobs/DrGKZyGeNGSR6H3uiCapTw/detail.html",publishDate:"2026-07-23复核可投",recommendDate:"2026-07-23",skills:"行政文件、文档归档、会议组织、办公用品管理、Office",resume:"突出Office熟练、责任心、沟通能力，以及酒店实习中的资料整理和现场协调",reasons:["全职且页面显示投递简历","明确双休和五险一金","专业限制较少","薪资符合4K–5K预期","行政与沟通能力可迁移"],risks:["公司业务领域较杂需核验具体用工主体","职位名称含客服需确认不含电话销售","公司主体所在地信息与工作地存在差异","行政工作成长速度可能一般","需确认试用期社保起缴时间"],weaknesses:["没有正式行政实习","文书写作案例不足","需解释跨专业动机","Excel高级功能需补强","应准备会议组织案例"],rating:5,matchScore:86,fit:"正式工作优先推荐",status:"待投递",progressDate:"2026-07-23",note:"页面显示全职、双休、五险一金和投递入口。投递前明确询问是否存在电话销售或业绩指标。",deleted:false},
+ {id:"pingan-henan-mt",company:"中国平安财产保险股份有限公司河南分公司",role:"26届职能管培生",city:"郑州·金水区",region:"河南",salary:"6K–8K·15薪",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CC245593320J40799404009.htm",publishDate:"2026-07-23复核在招",recommendDate:"2026-07-23",skills:"费用审核、经营分析、人力资源、行政管理、沟通协作",resume:"突出Office、责任心和沟通协调；针对人力/行政方向写酒店实习中的人员与现场支持",reasons:["全职且当前公司仍有在招职位","六险两金、周末双休","后续可分配人力或行政方向","应届本科可申请","薪资与培养路径较好"],risks:["保险行业并非候选人偏好","数学统计精算等专业优先","仅招聘1人竞争强","可能根据面试双选定岗","需确认是否完全没有业务指标"],weaknesses:["专业不占优","缺少财务或人力实习","校园经历较少","保险行业认知不足","需准备数据分析案例"],rating:5,matchScore:82,fit:"正式工作推荐",status:"待投递",progressDate:"2026-07-23",note:"职能内勤方向，不等同保险销售；投递前再次确认定岗不含销售、组训或业务推动指标。",deleted:false},
+ {id:"cpic-anhui-mt",company:"中国太平洋财产保险股份有限公司安徽分公司",role:"2026管培生",city:"安徽省内",region:"安徽",salary:"公告为准",source:"超级简历（校招信息）",url:"https://www.wondercv.com/xiaozhao/cpic-ah-2026-management-trainee-11122-849032/",publishDate:"截止2026-08-18",recommendDate:"2026-07-23",skills:"运营、承保理赔、风险控制、项目轮岗、沟通协作",resume:"突出沟通、服务意识、责任心和快速学习；说明愿意从运营支持方向切入",reasons:["2026届正式管培项目","页面显示立即投递且未到截止日期","七险二金保障完善","包含运营等非销售条线","24个月轮岗与导师培养"],risks:["硕士研究生优先","金融保险等专业更占优势","具体城市需服从分配","轮岗后岗位存在不确定性","需确认本科旅游管理是否可进入筛选"],weaknesses:["本科背景竞争力较弱","专业不对口","无保险行业实习","缺少校园项目","需补充结构化分析能力"],rating:4,matchScore:78,fit:"正式工作推荐",status:"待投递",progressDate:"2026-07-23",note:"优先选择运营、客户服务支持、综合管理方向；避开销售岗位。",deleted:false},
+ {id:"anhui-port-campus",company:"安徽省港口运营集团有限公司",role:"校园招聘综合管理员等岗位",city:"安徽多地",region:"安徽",salary:"岗位表为准",source:"新安人才网 / 集团招聘专题",url:"https://click.goodjobs.cn/2026/gk/index.html",publishDate:"2026-07-23页面仍可投",recommendDate:"2026-07-23",skills:"综合行政、生产经营支持、资料管理、沟通协调、执行力",resume:"突出Office、责任心、沟通协调和服务意识；逐岗对照专业要求修改",reasons:["国企招聘专题仍显示立即投递","面向2026届及毕业两年内未就业人员","包含多个综合管理员岗位","岗位分布安徽省内","平台与稳定性较好"],risks:["必须逐岗核对专业限制","部分岗位可能在港区基层","工作环境和班次需确认","薪资福利页面未集中展示","每个子岗位名额较少"],weaknesses:["专业可能不符合部分岗位","缺少物流港口知识","无国企笔试经验","校园经历为空","需准备服从基层安排的回答"],rating:4,matchScore:76,fit:"正式工作推荐",status:"待投递",progressDate:"2026-07-23",note:"进入专题后优先检查综合管理员岗位；只有明确写明正式用工及社保的子岗位才提交。",deleted:false},
+ {id:"shandong-lingong-campus",company:"山东临工工程机械有限公司",role:"2026届职能 / 运营管理类校招",city:"临沂",region:"山东",salary:"校招岗位为准",source:"超级简历（校招信息）",url:"https://www.wondercv.com/xiaozhao/shandong-lmg-2026-spring-campus-8473-c43da9/",publishDate:"2026-07-23页面可投",recommendDate:"2026-07-23",skills:"运营管理、综合协调、数据分析、流程执行、Office",resume:"突出责任心、学习能力、沟通协调和Office；用酒店实习说明现场运营意识",reasons:["山东地域优先级最高","2026届校招且显示立即投递","运营管理类接近目标方向","五险一金及补充商业保险","上市公司/大型制造平台"],risks:["具体岗位可能有专业限制","制造业节奏和文化需适应","可能安排基层轮岗","需在官网确认当前空缺","部分职能岗竞争较强"],weaknesses:["没有制造业经历","专业不对口","缺少数据分析作品","无校园干部经历","需补充流程改善案例"],rating:5,matchScore:88,fit:"正式工作重点推荐",status:"待投递",progressDate:"2026-07-23",note:"优先申请运营管理、综合管理、项目支持等不限专业或管理类岗位。",deleted:false},
+ {id:"cscec8-qingdao",company:"中建八局第四建设有限公司",role:"2026届校园招聘 / 管培通道",city:"青岛及项目所在地",region:"山东",salary:"岗位为准",source:"高校就业网 / 企业校招通道",url:"https://myjob.dlmu.edu.cn/campus/view/id/865132",publishDate:"2026-07-23复核可申请",recommendDate:"2026-07-23",skills:"项目协作、综合管理、资料整理、沟通协调、抗压能力",resume:"突出责任心、Office、沟通协作和快速学习；优先匹配综合职能或项目支持岗位",reasons:["央企平台且正式校招","五险两金、免费食宿","页面提供立即申请管培通道","青岛现已纳入地域范围","培养和晋升体系相对明确"],risks:["建筑央企可能长期项目制工作","岗位地点可能随项目调配","多数岗位有专业要求","工作压力可能较大","需核验是否有适合旅游管理的综合岗"],weaknesses:["专业不对口","没有工程项目经验","不一定适应项目驻场","缺少学生干部经历","需确认能否接受地域调配"],rating:4,matchScore:72,fit:"正式工作谨慎推荐",status:"待投递",progressDate:"2026-07-23",note:"仅投综合管理、人力行政、项目支持等专业条件符合的岗位。",deleted:false},
+ {id:"ruizhong-anhui-mt",company:"瑞众人寿保险有限责任公司安徽分公司",role:"安徽分公司2026届英才管培生",city:"合肥·庐阳区",region:"安徽",salary:"本科5K–8K",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CCL1469761090J40797675301.htm",publishDate:"2026-07-23复核可投",recommendDate:"2026-07-23",skills:"运营管理、跨部门轮岗、沟通协调、学习能力、服务意识",resume:"突出服务意识、沟通和快速学习；说明只考虑内勤运营管理、不做销售",reasons:["全职且页面显示立即投递","明确签订劳动合同","无销售任务","双休、五险一金及补充医疗","轮岗包含运营管理方向"],risks:["原则上要求硕士研究生","本科放宽条件含党员或优秀学生干部","保险行业仍需谨慎核验定岗","渠道管理可能接近业务推动","学历竞争压力较大"],weaknesses:["本科学历不占优势","没有党员或学生干部信息","专业非金融保险","无保险实习","需明确拒绝销售定岗"],rating:3,matchScore:68,fit:"低概率正式岗位",status:"待投递",progressDate:"2026-07-23",note:"可尝试但通过概率较低；提交前先询问普通本科旅游管理是否具备简历筛选资格。",deleted:false},
+ {id:"suning-hotel",company:"江苏苏宁银河酒店管理有限公司",role:"管培生（2026届应届生）",city:"南京",region:"江苏",salary:"5K–6K",source:"最佳东方",url:"https://m.veryeast.cn/1025586/2788650",publishDate:"2026-07-23已结束",recommendDate:"2026-07-23",skills:"宾客服务、运营轮岗、沟通协调",resume:"历史岗位参考",reasons:["专业方向匹配","面向2026届","培养路径较清晰","酒店实习相关","薪资符合预期"],risks:["页面右上角明确显示已结束","不再接受新投递","英语口语要求较高","可能轮班","不参与排名"],weaknesses:["英语四级未通过","酒店实践较短","缺少管理案例","校园经历较少","已错过投递窗口"],rating:0,matchScore:0,fit:"已结束",status:"已完成",progressDate:"2026-07-23",note:"用户在投递页确认右上角显示“已结束”。状态提示优先于页面底部残留的投递按钮。",deleted:false,inactive:true,inactiveReason:"投递页面明确显示“已结束”"},
+ {id:"qingzhou-media",company:"青州文旅数字化项目团队",role:"新媒体运营（实习）",city:"潍坊·青州",region:"山东",salary:"面议",source:"国家大学生就业服务平台 / 山东省教育厅",url:"https://job.ncss.cn/student/jobs/2bfqANuTcckemNcxiu3FzP/detail.html",publishDate:"2026-05-26更新",recommendDate:"2026-07-23",skills:"文旅策划、文案撰写、新媒体运营",resume:"仅作为作品与能力方向参考",reasons:["文旅方向相关","地点符合范围","页面仍有投递入口","本科可申请","可积累内容经验"],risks:["正文明确签署实习协议","仅购买意外商业保险","不是正式就业优先项","薪资未公开","转正机制不明"],weaknesses:["候选人目标是正式工作","没有新媒体作品集","缺少账号运营数据","专业不完全匹配","社保不符合正式岗位预期"],rating:0,matchScore:0,fit:"实习，不推荐",status:"已完成",progressDate:"2026-07-23",note:"页面虽标注全职，但正文明确写明实习安排及签署实习协议，已移出主榜。",deleted:false,inactive:true,inactiveReason:"正文明确为实习协议，不属于正式全职推荐"},
+ {id:"jinan-culture",company:"济南文旅发展集团有限公司",role:"2026校园招聘（文旅相关岗位）",city:"济南",region:"山东",salary:"已结束",source:"山东人才就业网",url:"https://www.sdrcjy.com.cn/index.php?a=shows&catid=66&g=Wap&id=53204",publishDate:"截止2026-04-13",recommendDate:"2026-07-23",skills:"文旅运营、活动执行、沟通协调",resume:"历史岗位参考",reasons:["国有文旅平台","地点符合范围","方向与专业相关","业务覆盖文旅项目","培养路径较清晰"],risks:["报名已截止","要求硕士及以上","要求大型企业实习","要求社团经历","不再接受新申请"],weaknesses:["候选人为本科","无社团经历","大型企业实习不足","项目案例不足","已错过报名时间"],rating:0,matchScore:0,fit:"已结束",status:"已完成",progressDate:"2026-07-23",note:"官方公告明确报名截止时间为2026年4月13日17:00。",deleted:false,inactive:true,inactiveReason:"报名已于 2026-04-13 结束"},
+ {id:"yantai-youth",company:"烟台市人社局见习基地（83家）",role:"2026第一批就业见习 / 大学生实习岗位",city:"烟台",region:"山东",salary:"以二维码岗位表为准",source:"烟台市人民政府",url:"https://www.yantai.gov.cn/col/col11795/art/2026/art_221a2aa2c39ac9b85c0547d763c5d10a.html",publishDate:"2026-07-22",recommendDate:"2026-07-23",skills:"岗位适应、沟通表达、Office、责任心、快速学习",resume:"扫描官方二维码后，优先筛选运营、项目助理、行政、文旅、酒店办公室岗位；突出应届身份和可立即到岗",reasons:["烟台市政府官方最新发布","覆盖83家见习基地","218个就业见习岗位、计划2737人","另有144个大学生实习岗位、需求1130人","烟台符合目标地域且排除青岛"],risks:["属于见习/实习资源而非统一正式岗位","劳动合同与社保属性需逐岗确认","薪资和工作制度需逐岗核验","培养与留用机制因单位而异","不能替代正式全职岗位投递"],weaknesses:["候选人核心目标仍是正式就业","需要逐条筛选大量岗位","需确认是否符合高校毕业生见习资格","缺少项目经历","应提前询问见习期后留用率"],rating:4,matchScore:72,fit:"官方就业资源（见习/实习）",status:"待投递",progressDate:"2026-07-23",note:"按用户要求进入主榜。官方公告：83家基地、218个就业见习岗位计划2737人；144个大学生实习岗位需求1130人；通过页面二维码查询并对接。",deleted:false},
+ {id:"huate-pa",company:"山东华特智慧技术有限公司",role:"项目经理助理（应届）",city:"济南·历下区",region:"山东",salary:"待核验",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CCL1485046480J40776543806.htm",publishDate:"无法再次确认",recommendDate:"2026-07-23",skills:"项目跟进、沟通协调、文档管理",resume:"历史岗位参考",reasons:["应届方向","项目助理方向","地点符合","可积累项目经验","沟通能力可迁移"],risks:["当前详情页无法重新确认","无法确认投递按钮","专业优先技术类","技术门槛较高","不进入推荐榜"],weaknesses:["专业不对口","缺少技术知识","没有项目案例","行业认知不足","岗位有效性待确认"],rating:0,matchScore:0,fit:"待人工核验",status:"已完成",progressDate:"2026-07-23",note:"严格规则下，无法重新确认投递入口，已移出主榜。",deleted:false,inactive:true,inactiveReason:"无法确认当前仍存在有效投递入口"},
+ {id:"wuxi-space",company:"江苏寰宇乾堃航天科技集团有限公司",role:"项目运营管理专员",city:"无锡·梁溪区",region:"江苏",salary:"6K–10K",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CCL1236559440J40934472515.htm",publishDate:"2026-04-15更新",recommendDate:"2026-07-23",skills:"项目进度、内外协调、合同验收",resume:"历史岗位参考",reasons:["2026届方向","经验不限","无锡符合范围","项目运营路径","薪资较高"],risks:["当前详情页无法重新确认","无法确认投递按钮","专业要求不匹配","更新超过30天","不进入推荐榜"],weaknesses:["专业明显不占优","没有工程基础","项目经验不足","合同知识空白","岗位有效性待确认"],rating:0,matchScore:0,fit:"待人工核验",status:"已完成",progressDate:"2026-07-23",note:"严格规则下，无法重新确认投递入口，已移出主榜。",deleted:false,inactive:true,inactiveReason:"无法确认当前仍存在有效投递入口"},
+ {id:"bid-assistant",company:"嘉林企业",role:"投标助理 / 业务助理（校招）",city:"济南 / 南京曾可选",region:"山东",salary:"6K–8K",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CC120723930J40881838203.htm",publishDate:"无法再次确认",recommendDate:"2026-07-23",skills:"投标支持、合同资料、Office",resume:"历史岗位参考",reasons:["曾包含济南南京","应届方向","福利描述较完整","Office要求匹配","可学项目流程"],risks:["当前详情页无法重新确认","标题原为青岛岗位","可能含业务销售性质","建筑专业优先","不进入推荐榜"],weaknesses:["非建筑专业","投标知识不足","缺少材料案例","行业认知不足","岗位有效性待确认"],rating:0,matchScore:0,fit:"待人工核验",status:"已完成",progressDate:"2026-07-23",note:"严格规则下，无法重新确认投递入口，已移出主榜。",deleted:false,inactive:true,inactiveReason:"无法确认当前仍存在有效投递入口"},
+ {id:"sdpublishing",company:"山东新铧文旅发展集团有限公司",role:"市场运营部运营管理岗（社会招聘）",city:"山东",region:"山东",salary:"已结束",source:"山东出版集团官网",url:"https://www.sdpress.com.cn/News/1/44/NewsDetail_11108_1.html",publishDate:"截止2026-03-27",recommendDate:"2026-07-23",skills:"市场运营、文旅活动、沟通协调",resume:"历史岗位参考",reasons:["旅游管理专业相关","省属文化文旅平台","运营方向匹配","本科岗位","可作为未来目标"],risks:["报名已截止","属于社会招聘","可能要求工作经验","证书优先","不再接受新申请"],weaknesses:["实习经历较短","没有优先证书","缺少运营项目","校园经历为空","已错过报名时间"],rating:0,matchScore:0,fit:"已结束",status:"已完成",progressDate:"2026-07-23",note:"集团官网明确报名截止日期为2026年3月27日。",deleted:false,inactive:true,inactiveReason:"报名已于 2026-03-27 结束"}
+];
+const savedJobs=JSON.parse(localStorage.getItem(KEY)||"null");
+let jobs=savedJobs?[...seed.filter(s=>!savedJobs.some(j=>j.id===s.id)),...savedJobs]:seed;
+let editingId=null;
+let showHistory=false;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function save(){localStorage.setItem(KEY,JSON.stringify(jobs));render()}
+function filtered(){
+ const q=$("#search").value.trim().toLowerCase(),st=$("#statusFilter").value,rg=$("#cityFilter").value;
+ const regionWeight={山东:8,江苏:5,安徽:3,河南:1};
+ return jobs.filter(j=>(showHistory||(!j.inactive&&!j.deleted))&&(!q||[j.company,j.role,j.city,j.skills,j.fit].join(" ").toLowerCase().includes(q))&&(!st||j.status===st)&&(!rg||j.region===rg))
+  .sort((a,b)=>(Number(a.deleted)-Number(b.deleted))||(Number(a.inactive)-Number(b.inactive))||String(b.recommendDate).localeCompare(String(a.recommendDate))||((b.matchScore+(regionWeight[b.region]||0))-(a.matchScore+(regionWeight[a.region]||0))));
+}
+function render(){
+ const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
+ $("#stats").innerHTML=[["有效主榜",active.length,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
+ const list=filtered();
+ let rank=0;
+ $("#jobRows").innerHTML=list.length?list.map(j=>`<tr class="${j.deleted||j.inactive?"deleted":""}">
+  <td><div class="company">${j.deleted?"已删除":j.inactive?"不参与排名":("#"+(++rank))} · ${esc(j.company)}</div><div class="role">${esc(j.role)}</div><div class="minor">${esc(j.fit||"")}</div>${j.inactive?`<div class="invalid-note">${esc(j.inactiveReason)}</div>`:""}</td>
+  <td>${esc(j.city)}<div class="minor">${esc(j.salary)}</div></td>
+  <td>${esc(j.source)}<div class="minor">${esc(j.publishDate)}</div></td>
+  <td>${esc(j.skills)}</td>
+  <td><ul class="mini-list">${j.reasons.slice(0,3).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
+  <td><ul class="mini-list">${[...j.risks.slice(0,2),j.weaknesses[0]].map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
+  <td><b>${esc(j.matchScore)}分</b><div class="stars">${"★".repeat(j.rating)}${"☆".repeat(Math.max(0,5-j.rating))}</div></td>
+  <td><span class="badge ${j.status==="已投递"?"sent":j.status==="已完成"?"done":""}">${j.deleted?"已删除":esc(j.status)}</span></td>
+  <td><a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">${j.inactive?"查看历史公告":"打开投递页"} ↗</a><br><button class="detail-btn" onclick="showDetail('${j.id}')">完整分析</button><br>${j.deleted?`<button class="detail-btn" onclick="restoreJob('${j.id}')">恢复</button>`:j.inactive?"":`<button class="detail-btn" onclick="openEdit('${j.id}')">编辑推进</button><br><button class="detail-btn" style="color:var(--red)" onclick="deleteJob('${j.id}')">删除并保留</button>`}</td>
+  <td>推荐：${esc(j.recommendDate)}<div class="minor">推进：${esc(j.progressDate)}</div></td>
+  <td>${esc(j.resume)}</td>
+ </tr>`).join(""):`<tr><td colspan="11" class="empty">没有符合当前筛选条件的岗位</td></tr>`;
+}
+function deleteJob(id){const j=jobs.find(x=>x.id===id);j.deleted=true;j.note=(j.note||"")+"｜删除日期："+new Date().toISOString().slice(0,10);save()}
+function restoreJob(id){const j=jobs.find(x=>x.id===id);j.deleted=false;save()}
+function showDetail(id){
+ const j=jobs.find(x=>x.id===id);$("#detailTitle").textContent=j.company+"｜"+j.role;
+ const panel=(t,a)=>`<section class="panel"><h3>${t}</h3><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`;
+ $("#detailBody").innerHTML=`<div class="detail-grid">
+ <section class="panel wide"><h3>岗位摘要</h3><p><b>匹配度：</b>${esc(j.matchScore)}分　<b>结论：</b>${esc(j.fit)}　<b>城市：</b>${esc(j.city)}　<b>薪资：</b>${esc(j.salary)}　<b>状态：</b>${esc(j.status)}</p><p><b>关键技能：</b>${esc(j.skills)}</p><p><b>简历突出方向：</b>${esc(j.resume)}</p></section>
+ ${panel("推荐原因（5点）",j.reasons)}${panel("不适合 / 风险（5点）",j.risks)}${panel("候选人弱点（5点）",j.weaknesses)}
+ <section class="panel"><h3>备注</h3><p>${esc(j.note||"暂无")}</p></section></div>`;
+ detailDialog.showModal();
+}
+const fields=[
+ ["company","公司"],["role","岗位"],["city","城市"],["region","地区","select"],["salary","薪资"],["source","来源"],
+ ["url","投递链接","url"],["publishDate","发布日期"],["recommendDate","推荐日期","date"],["progressDate","推进日期","date"],["status","当前状态","selectStatus"],["rating","推荐等级（1-5）","number"],["matchScore","匹配分（0-100）","number"],
+ ["skills","关键技能要求","textarea","span3"],["resume","简历突出方向","textarea","span3"],["note","备注","textarea","span3"]
+];
+function openEdit(id){
+ editingId=id||null;const today=new Date().toISOString().slice(0,10),j=id?jobs.find(x=>x.id===id):{region:"山东",status:"待投递",rating:3,matchScore:60,recommendDate:today,progressDate:today};
+ $("#editTitle").textContent=id?"编辑岗位推进":"新增岗位";
+ $("#editFields").innerHTML=fields.map(([k,l,t,cl])=>{
+  let control;
+  if(t==="select")control=`<select class="field" name="${k}">${["山东","江苏","安徽","河南"].map(v=>`<option ${j[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
+  else if(t==="selectStatus")control=`<select class="field" name="${k}">${["待投递","已投递","已完成"].map(v=>`<option ${j[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
+  else if(t==="textarea")control=`<textarea class="field" name="${k}" rows="3">${esc(j[k]||"")}</textarea>`;
+  else control=`<input class="field" name="${k}" type="${t||"text"}" value="${esc(j[k]||"")}" ${k==="rating"?'min="1" max="5"':""}>`;
+  return `<label class="${cl||""}">${l}${control}</label>`;
+ }).join("");editDialog.showModal();
+}
+$("#jobForm").addEventListener("submit",e=>{
+ e.preventDefault();const d=Object.fromEntries(new FormData(e.target));d.rating=Math.max(1,Math.min(5,Number(d.rating)||3));d.matchScore=Math.max(0,Math.min(100,Number(d.matchScore)||0));
+ if(editingId){const old=jobs.find(x=>x.id===editingId);Object.assign(old,d)}
+ else jobs.push({...d,id:"job-"+Date.now(),reasons:["待补充","待补充","待补充","待补充","待补充"],risks:["待核验","待核验","待核验","待核验","待核验"],weaknesses:["待评估","待评估","待评估","待评估","待评估"]});
+ editDialog.close();save();
+});
+$("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(jobs,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="求职岗位推进数据-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)};
+$("#addBtn").onclick=()=>openEdit();["search","statusFilter","cityFilter"].forEach(id=>$("#"+id).addEventListener("input",render));
+$("#historyBtn").onclick=()=>{showHistory=!showHistory;$("#historyBtn").textContent=showHistory?"收起历史岗位":"展开历史岗位";render()};
+render();
+</script>
+</body>
+</html>
