@@ -347,6 +347,7 @@ async function connect(){
     await Promise.all([loadJobs(),loadSettings()]);
     subscribeRealtime();
     connected=true; updateButtons();
+    render();
     setNotice(`已连接 Supabase。当前加载 ${jobs.length} 条岗位记录，后续变更会实时同步。`,"ok");
   }catch(err){
     connected=false; updateButtons(); render();
