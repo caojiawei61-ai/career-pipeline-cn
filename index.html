@@ -293,6 +293,7 @@ const SYSTEM_REFRESH_ID="__system_refresh_settings__";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>new Date().toISOString().slice(0,10);
+const clampScore=value=>Math.max(0,Math.min(100,Math.round(Number(value)||0)));
 const isSystemId=id=>String(id||"").startsWith("__system_");
 const isMissingAppSettings=error=>String(error?.message||"").includes("public.app_settings")||String(error?.message||"").includes("app_settings");
 
@@ -303,7 +304,7 @@ function toDb(j){
     recommend_date:j.recommendDate||j.recommend_date||today(), skills:j.skills||"", resume:j.resume||"",
     reasons:Array.isArray(j.reasons)?j.reasons:splitLines(j.reasons), risks:Array.isArray(j.risks)?j.risks:splitLines(j.risks),
     weaknesses:Array.isArray(j.weaknesses)?j.weaknesses:splitLines(j.weaknesses), rating:Number(j.rating)||3,
-    match_score:Number(j.matchScore??j.match_score)||0, fit:j.fit||"", status:j.status||"待投递",
+    match_score:clampScore(j.matchScore??j.match_score), fit:j.fit||"", status:j.status||"待投递",
     progress_date:j.progressDate||j.progress_date||today(), note:j.note||"", deleted:!!j.deleted,
     inactive:!!j.inactive, inactive_reason:j.inactiveReason||j.inactive_reason||""
   };
@@ -313,7 +314,7 @@ function fromDb(r){
     id:r.id, company:r.company, role:r.role, city:r.city, region:r.region, salary:r.salary, source:r.source,
     url:r.url, publishDate:r.publish_date, recommendDate:r.recommend_date, skills:r.skills, resume:r.resume,
     reasons:Array.isArray(r.reasons)?r.reasons:[], risks:Array.isArray(r.risks)?r.risks:[],
-    weaknesses:Array.isArray(r.weaknesses)?r.weaknesses:[], rating:r.rating, matchScore:r.match_score,
+    weaknesses:Array.isArray(r.weaknesses)?r.weaknesses:[], rating:r.rating, matchScore:clampScore(r.match_score),
     fit:r.fit, status:r.status, progressDate:r.progress_date, note:r.note, deleted:r.deleted,
     inactive:r.inactive, inactiveReason:r.inactive_reason
   };
@@ -421,7 +422,7 @@ function preferenceScore(j){
  const officeBonus=/行政|运营|项目|助理|商务|管培|综合|内勤|Office|文档|资料/.test(text)?4:0;
  const excludedPenalty=(candidateProfile.excludedRoles||[]).some(role=>text.includes(role))?-30:0;
  const inactivePenalty=(j.inactive||j.deleted)?-100:0;
- return Math.max(0,Math.round((Number(j.matchScore)||0)+(regionWeight[j.region]||0)+roleBonus+hotelBonus+officeBonus+excludedPenalty+inactivePenalty));
+ return clampScore((Number(j.matchScore)||0)+(regionWeight[j.region]||0)+roleBonus+hotelBonus+officeBonus+excludedPenalty+inactivePenalty);
 }
 function filtered(){
  const q=$("#search").value.trim().toLowerCase(),st=$("#statusFilter").value,rg=$("#cityFilter").value;
