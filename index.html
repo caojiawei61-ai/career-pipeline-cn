@@ -51,14 +51,10 @@
     .jobs th:nth-child(1){width:210px}.jobs th:nth-child(2){width:110px}.jobs th:nth-child(3){width:115px}
     .jobs th:nth-child(4){width:135px}.jobs th:nth-child(5),.jobs th:nth-child(6){width:225px}
     .jobs th:nth-child(7){width:90px}.jobs th:nth-child(8){width:105px}.jobs th:nth-child(9){width:125px}.jobs th:nth-child(10){width:105px}.jobs th:nth-child(11){width:190px}
-    th{position:sticky;top:0;z-index:2;background:#edf3ef;color:#536159;text-align:left;padding:12px 11px;font-size:12px;letter-spacing:.04em;border-bottom:1px solid var(--line)}
-    .jobs th:first-child{left:0;z-index:4;box-shadow:10px 0 14px rgba(35,56,44,.06)}
+    th{position:sticky;top:0;z-index:5;background:#edf3ef;color:#536159;text-align:left;padding:12px 11px;font-size:12px;letter-spacing:.04em;border-bottom:1px solid var(--line)}
     td{padding:14px 11px;border-bottom:1px solid #edf1ee;vertical-align:top;font-size:14px}
-    .jobs td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:10px 0 14px rgba(35,56,44,.045)}
     tbody tr:hover{background:#fbfdfb}
-    tbody tr:hover td:first-child{background:#fbfdfb}
     tbody tr.deleted{opacity:.58;background:#f5f5f5}
-    tbody tr.deleted td:first-child{background:#f5f5f5}
     .company{font-weight:800}
     .role{color:var(--green);font-weight:800;margin-top:4px}
     .minor{color:var(--muted);font-size:12px;margin-top:5px}
@@ -107,7 +103,6 @@
     <div>
       <div class="eyebrow">Career Pipeline · Supabase Realtime</div>
       <h1>求职岗位推进台</h1>
-      <p class="lead">GitHub Pages 只负责展示网页；Supabase 是唯一岗位数据源。新增、编辑、删除都会写入 Supabase，其他在线成员会通过 Realtime 自动看到变化。</p>
       <div class="hero-meta" id="refreshInfo"></div>
     </div>
     <div class="actions">
@@ -137,7 +132,7 @@
       </table>
     </div>
   </section>
-  <p class="foot">部署方式：GitHub Pages 发布本页；Supabase 表 <code>jobs</code> 存储岗位。浏览器只保存 Supabase 连接参数，不保存岗位作为工作数据。</p>
+  <p class="foot">说明：GitHub Pages 只负责展示网页；Supabase 是唯一岗位数据源。新增、编辑、删除都会写入 Supabase，其他在线成员会通过 Realtime 自动看到变化。浏览器只保存 Supabase 连接参数，不保存岗位作为工作数据。</p>
 </main>
 
 <dialog id="setupDialog">
@@ -290,11 +285,16 @@ let jobs=[];
 let editingId=null;
 let showHistory=false;
 let connected=false;
+let settingsStorage="app_settings";
 let candidateProfile={...defaultCandidateProfile};
 let refreshSettings={...defaultRefreshSettings};
+const SYSTEM_PROFILE_ID="__system_candidate_profile__";
+const SYSTEM_REFRESH_ID="__system_refresh_settings__";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>new Date().toISOString().slice(0,10);
+const isSystemId=id=>String(id||"").startsWith("__system_");
+const isMissingAppSettings=error=>String(error?.message||"").includes("public.app_settings")||String(error?.message||"").includes("app_settings");
 
 function toDb(j){
   return {
@@ -355,18 +355,27 @@ async function connect(){
 async function loadJobs(){
   const {data,error}=await client.from("jobs").select("*").order("recommend_date",{ascending:false}).order("match_score",{ascending:false});
   if(error) throw error;
-  jobs=(data||[]).map(fromDb);
+  jobs=(data||[]).filter(r=>!isSystemId(r.id)).map(fromDb);
   render();
 }
 async function loadSettings(){
   if(!client) return;
   const {data,error}=await client.from("app_settings").select("key,value").in("key",["candidate_profile","refresh_settings"]);
   if(error){
+    if(isMissingAppSettings(error)){
+      settingsStorage="jobs";
+      await loadSettingsFromJobs();
+      return;
+    }
     candidateProfile={...defaultCandidateProfile};
     refreshSettings={...defaultRefreshSettings};
     return;
   }
-  for(const row of data||[]){
+  settingsStorage="app_settings";
+  applySettingsRows(data||[]);
+}
+function applySettingsRows(rows){
+  for(const row of rows||[]){
     if(row.key==="candidate_profile") candidateProfile={...defaultCandidateProfile,...row.value};
     if(row.key==="refresh_settings"){
       refreshSettings={...defaultRefreshSettings,...row.value};
@@ -376,11 +385,31 @@ async function loadSettings(){
     }
   }
 }
+async function loadSettingsFromJobs(){
+  const {data,error}=await client.from("jobs").select("*").in("id",[SYSTEM_PROFILE_ID,SYSTEM_REFRESH_ID]);
+  candidateProfile={...defaultCandidateProfile};
+  refreshSettings={...defaultRefreshSettings};
+  if(error) return;
+  for(const row of data||[]){
+    try{
+      const value=JSON.parse(row.note||"{}");
+      if(row.id===SYSTEM_PROFILE_ID) candidateProfile={...defaultCandidateProfile,...value};
+      if(row.id===SYSTEM_REFRESH_ID){
+        refreshSettings={...defaultRefreshSettings,...value};
+        delete refreshSettings.scheduleLocal;
+        if(!refreshSettings.scheduleBeijing) refreshSettings.scheduleBeijing=defaultRefreshSettings.scheduleBeijing;
+        if(String(refreshSettings.nextRefresh||"").includes("越南")||String(refreshSettings.nextRefresh||"").includes("Asia/")) refreshSettings.nextRefresh=defaultRefreshSettings.nextRefresh;
+      }
+    }catch(_){}
+  }
+}
 function subscribeRealtime(){
-  client.channel("jobs-live")
-    .on("postgres_changes",{event:"*",schema:"public",table:"jobs"},()=>loadJobs())
-    .on("postgres_changes",{event:"*",schema:"public",table:"app_settings"},async()=>{await loadSettings();render();})
-    .subscribe(status=>{
+  const channel=client.channel("jobs-live")
+    .on("postgres_changes",{event:"*",schema:"public",table:"jobs"},async()=>{await loadJobs(); if(settingsStorage==="jobs"){await loadSettings(); render();}});
+  if(settingsStorage==="app_settings"){
+    channel.on("postgres_changes",{event:"*",schema:"public",table:"app_settings"},async()=>{await loadSettings();render();});
+  }
+  channel.subscribe(status=>{
       if(status==="SUBSCRIBED") setNotice(`已连接 Supabase Realtime。当前 ${jobs.length} 条记录。`,"ok");
     });
 }
@@ -402,13 +431,14 @@ function filtered(){
 }
 function render(){
  const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
+ const todayNew=active.filter(j=>j.recommendDate===today()).length;
  $("#refreshInfo").innerHTML=[
   ["刷新频率",refreshSettings.frequency],
   ["北京时间",refreshSettings.scheduleBeijing],
   ["下次刷新",refreshSettings.nextRefresh]
  ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
  $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新规则</h2><p>${esc(refreshSettings.candidateTarget)}。末次刷新：${esc(refreshSettings.lastRefresh)}。</p><div class="tag-row"><span class="tag">${esc(candidateProfile.locationNote)}</span><span class="tag">按画像动态排名</span></div></article>`;
- $("#stats").innerHTML=[["有效主榜",active.length,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
+ $("#stats").innerHTML=[["今日新增",todayNew,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
  const list=filtered();
  let rank=0;
  $("#jobRows").innerHTML=list.length?list.map(j=>`<tr class="${j.deleted||j.inactive?"deleted":""}">
@@ -468,12 +498,29 @@ async function saveProfile(e){
  for(const [k,v] of Object.entries(data)){
   nextProfile[k]=["locations","preferredRoles","excludedRoles","strengths","risks"].includes(k)?splitLines(v):v.trim();
  }
- const {error}=await client.from("app_settings").upsert([{key:"candidate_profile",value:nextProfile}],{onConflict:"key"});
+ const {error}=await saveSetting("candidate_profile",nextProfile);
  if(error) return alert(`保存失败：${error.message}`);
  candidateProfile={...defaultCandidateProfile,...nextProfile};
  profileDialog.close();
  render();
- setNotice("求职者信息已保存，推荐分和岗位排序已按最新信息刷新。","ok");
+ setNotice(`求职者信息已保存到 Supabase（${settingsStorage==="jobs"?"兼容模式：jobs 隐藏系统记录":"app_settings"}），推荐分和岗位排序已按最新信息刷新。`,"ok");
+}
+async function saveSetting(key,value){
+ if(settingsStorage==="app_settings"){
+   const {error}=await client.from("app_settings").upsert([{key,value}],{onConflict:"key"});
+   if(!error) return {error:null};
+   if(!isMissingAppSettings(error)) return {error};
+   settingsStorage="jobs";
+ }
+ const systemId=key==="candidate_profile"?SYSTEM_PROFILE_ID:SYSTEM_REFRESH_ID;
+ const systemRole=key==="candidate_profile"?"求职者信息":"刷新设置";
+ const systemRow={
+   id:systemId,company:"系统设置",role:systemRole,city:"云端",region:"系统",salary:"",source:"Supabase jobs fallback",url:"",
+   publishDate:today(),recommendDate:today(),skills:"系统配置",resume:"隐藏系统记录，请勿删除",reasons:["用于兼容缺少 app_settings 表的 Supabase 项目"],risks:[],weaknesses:[],rating:1,matchScore:0,
+   fit:"系统记录",status:"系统",progressDate:today(),note:JSON.stringify(value),deleted:true,inactive:true,inactiveReason:"系统隐藏记录"
+ };
+ const {error}=await client.from("jobs").upsert([toDb(systemRow)],{onConflict:"id"});
+ return {error};
 }
 async function upsertJob(job){
   if(!connected) return alert("请先连接 Supabase。");
@@ -546,10 +593,9 @@ $("#setupBtn").onclick=()=>{
 $("#seedBtn").onclick=async()=>{
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(seed.map(toDb),{onConflict:"id"});
-  const {error:settingsError}=await client.from("app_settings").upsert([
-    {key:"candidate_profile",value:defaultCandidateProfile},
-    {key:"refresh_settings",value:{...defaultRefreshSettings,lastRefresh:new Date().toLocaleString("zh-CN",{hour12:false})}}
-  ],{onConflict:"key"});
+  const {error:profileError}=await saveSetting("candidate_profile",defaultCandidateProfile);
+  const {error:refreshError}=await saveSetting("refresh_settings",{...defaultRefreshSettings,lastRefresh:new Date().toLocaleString("zh-CN",{hour12:false})});
+  const settingsError=profileError||refreshError;
   if(error||settingsError) alert(`初始化失败：${(error||settingsError).message}`);
   else setNotice(`已将 ${seed.length} 条示例岗位写入 Supabase。所有访问者刷新后会看到同一份数据。`,"ok");
 };
