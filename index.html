@@ -21,6 +21,7 @@
     h1{font-size:clamp(28px,4vw,48px);line-height:1.08;margin:8px 0 10px;letter-spacing:0}
     .lead{color:var(--muted);margin:0;max-width:820px;line-height:1.7}
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .actions .profile-btn{width:100%;background:#fffdf5;border-color:#e7d7a8;color:#735019}
     .btn{border:1px solid var(--line);background:white;border-radius:8px;padding:10px 14px;color:var(--ink);font-weight:700}
     .btn.primary{background:var(--green);color:white;border-color:var(--green)}
     .btn.danger{color:var(--red)}
@@ -28,6 +29,15 @@
     .notice{background:#fff8e8;border:1px solid #eed9a4;border-radius:8px;padding:12px 16px;color:#735019;font-size:14px;margin-bottom:18px}
     .notice.ok{background:#e8f4ed;border-color:#c9dfd2;color:#1d6b4d}
     .notice.error{background:#fff0f0;border-color:#efc4c4;color:#8b2f2f}
+    .hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:white;border-radius:999px;padding:7px 11px;color:var(--muted);font-size:13px;font-weight:700}
+    .pill strong{color:var(--green)}
+    .profile-band{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:18px}
+    .profile-card{background:linear-gradient(135deg,#ffffff 0%,#f7fbf8 58%,#fff8e8 100%);border:1px solid var(--line);border-radius:8px;padding:16px 18px;box-shadow:var(--shadow)}
+    .profile-card h2{margin:0 0 8px;font-size:18px}
+    .profile-card p{margin:0;color:var(--muted);line-height:1.65}
+    .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tag{display:inline-flex;border-radius:999px;background:var(--green2);color:var(--green);font-size:12px;font-weight:800;padding:6px 9px}
     .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
     .stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:17px 18px;box-shadow:var(--shadow)}
     .stat small{color:var(--muted);display:block;margin-bottom:8px}
@@ -68,6 +78,10 @@
     .panel{border:1px solid var(--line);border-radius:8px;padding:15px}
     .panel h3{margin:0 0 9px;font-size:14px;color:var(--green)}
     .panel ul{margin:0;padding-left:20px;line-height:1.65}
+    .profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .profile-item{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fbfdfb}
+    .profile-item small{display:block;color:var(--muted);font-weight:800;margin-bottom:6px}
+    .profile-item div{line-height:1.6}
     .wide{grid-column:1/-1}
     .edit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
     .edit-grid label{font-size:12px;color:var(--muted);font-weight:700}
@@ -77,7 +91,7 @@
     .foot{color:var(--muted);font-size:12px;line-height:1.7;margin-top:14px}
     code{background:#edf3ef;border:1px solid var(--line);border-radius:6px;padding:1px 5px}
     pre{white-space:pre-wrap;background:#111b15;color:#e8f4ed;border-radius:8px;padding:14px;overflow:auto;font-size:12px;line-height:1.55}
-    @media(max-width:760px){.wrap{padding:20px 14px 40px}.top{display:block}.actions{justify-content:flex-start;margin-top:16px}.stats{grid-template-columns:1fr 1fr}.toolbar{grid-template-columns:1fr}.detail-grid,.edit-grid{grid-template-columns:1fr}.span2,.span3,.wide{grid-column:auto}}
+    @media(max-width:760px){.wrap{padding:20px 14px 40px}.top{display:block}.actions{justify-content:flex-start;margin-top:16px}.stats{grid-template-columns:1fr 1fr}.toolbar,.profile-band{grid-template-columns:1fr}.detail-grid,.edit-grid,.profile-grid{grid-template-columns:1fr}.span2,.span3,.wide{grid-column:auto}}
   </style>
 </head>
 <body>
@@ -87,15 +101,18 @@
       <div class="eyebrow">Career Pipeline · Supabase Realtime</div>
       <h1>求职岗位推进台</h1>
       <p class="lead">GitHub Pages 只负责展示网页；Supabase 是唯一岗位数据源。新增、编辑、删除都会写入 Supabase，其他在线成员会通过 Realtime 自动看到变化。</p>
+      <div class="hero-meta" id="refreshInfo"></div>
     </div>
     <div class="actions">
       <button class="btn" id="setupBtn">Supabase 设置</button>
       <button class="btn" id="seedBtn">初始化示例岗位</button>
       <button class="btn" id="exportBtn">导出当前数据</button>
       <button class="btn primary" id="addBtn">＋ 新增岗位</button>
+      <button class="btn profile-btn" id="profileBtn">求职者信息</button>
     </div>
   </header>
   <div class="notice" id="connectionNotice">正在连接 Supabase...</div>
+  <section class="profile-band" id="profileBand"></section>
   <section class="stats" id="stats"></section>
   <section class="toolbar">
     <input class="field" id="search" placeholder="搜索公司、岗位、城市或技能">
@@ -135,6 +152,7 @@
 </dialog>
 <dialog id="detailDialog"><div class="modal-head"><div><div class="eyebrow">岗位分析</div><h2 id="detailTitle"></h2></div><button class="close" onclick="detailDialog.close()">×</button></div><div class="modal-body" id="detailBody"></div></dialog>
 <dialog id="editDialog"><div class="modal-head"><div><div class="eyebrow">Pipeline Record</div><h2 id="editTitle">新增岗位</h2></div><button class="close" onclick="editDialog.close()">×</button></div><form class="modal-body" id="jobForm"><div class="edit-grid" id="editFields"></div><div class="modal-actions"><button type="button" class="btn" onclick="editDialog.close()">取消</button><button class="btn primary" type="submit">保存到 Supabase</button></div></form></dialog>
+<dialog id="profileDialog"><div class="modal-head"><div><div class="eyebrow">Candidate Profile</div><h2>求职者信息</h2></div><button class="close" onclick="profileDialog.close()">×</button></div><div class="modal-body" id="profileBody"></div></dialog>
 
 <script>
 const DEFAULT_SUPABASE_URL="";
@@ -159,6 +177,32 @@ const seed=[
  {id:"bid-assistant",company:"嘉林企业",role:"投标助理 / 业务助理（校招）",city:"济南 / 南京曾可选",region:"山东",salary:"6K–8K",source:"智联招聘",url:"https://www.zhaopin.com/jobdetail/CC120723930J40881838203.htm",publishDate:"无法再次确认",recommendDate:"2026-07-23",skills:"投标支持、合同资料、Office",resume:"历史岗位参考",reasons:["曾包含济南南京","应届方向","福利描述较完整","Office要求匹配","可学项目流程"],risks:["当前详情页无法重新确认","标题原为青岛岗位","可能含业务销售性质","建筑专业优先","不进入推荐榜"],weaknesses:["非建筑专业","投标知识不足","缺少材料案例","行业认知不足","岗位有效性待确认"],rating:0,matchScore:0,fit:"待人工核验",status:"已完成",progressDate:"2026-07-23",note:"严格规则下，无法重新确认投递入口，已移出主榜。",deleted:false,inactive:true,inactiveReason:"无法确认当前仍存在有效投递入口"},
  {id:"sdpublishing",company:"山东新铧文旅发展集团有限公司",role:"市场运营部运营管理岗（社会招聘）",city:"山东",region:"山东",salary:"已结束",source:"山东出版集团官网",url:"https://www.sdpress.com.cn/News/1/44/NewsDetail_11108_1.html",publishDate:"截止2026-03-27",recommendDate:"2026-07-23",skills:"市场运营、文旅活动、沟通协调",resume:"历史岗位参考",reasons:["旅游管理专业相关","省属文化文旅平台","运营方向匹配","本科岗位","可作为未来目标"],risks:["报名已截止","属于社会招聘","可能要求工作经验","证书优先","不再接受新申请"],weaknesses:["实习经历较短","没有优先证书","缺少运营项目","校园经历为空","已错过报名时间"],rating:0,matchScore:0,fit:"已结束",status:"已完成",progressDate:"2026-07-23",note:"集团官网明确报名截止日期为2026年3月27日。",deleted:false,inactive:true,inactiveReason:"报名已于 2026-03-27 结束"}
 ];
+const defaultCandidateProfile={
+  label:"求职者 A",
+  graduation:"2026届本科，预计2026年6月毕业",
+  school:"天津农学院",
+  major:"旅游管理",
+  genderAge:"中国女性，22岁",
+  english:"英语四级未过",
+  salary:"期望税前4K-5K；可接受有培养前景的3500试用/培训期",
+  target:"核心目标是找到有社保的正式全职工作，不限定专业方向",
+  locations:["山东","江苏","安徽","河南"],
+  locationNote:"地域倾向：山东 > 江苏 > 安徽 > 河南；青岛允许",
+  preferredRoles:["酒店管理","文旅运营","运营","项目助理","行政","商务助理","管培生","制造业办公室岗位"],
+  excludedRoles:["销售","电话客服","夜班","流水线","单休","无社保","保险销售","直播","地推","医美销售","房产中介"],
+  strengths:["沟通表达较好","服务意识强","责任心强","学习速度快","Word/Excel/PPT较熟练"],
+  risks:["英语四级未过","实习仅2个月酒店助理管理","校园经历较少","项目经历不足","方向仍需通过岗位试错收敛"],
+  experience:"酒店助理管理实习2个月",
+  workStyle:"接受租房，接受带薪培训，完全不做销售，倾向外企/国企/央企/大型平台"
+};
+const defaultRefreshSettings={
+  frequency:"每天1次自动刷新",
+  scheduleLocal:"09:30 Asia/Ho_Chi_Minh",
+  scheduleBeijing:"10:30 北京时间",
+  candidateTarget:"每天抓取20个候选岗位，通过硬性核验后进入推荐主榜",
+  lastRefresh:"等待首次 Supabase 同步",
+  nextRefresh:"每日09:30越南时间 / 10:30北京时间"
+};
 const schemaSql=`create table if not exists public.jobs (
   id text primary key,
   company text not null,
@@ -194,6 +238,18 @@ create policy "jobs_select_all" on public.jobs for select using (true);
 create policy "jobs_insert_all" on public.jobs for insert with check (true);
 create policy "jobs_update_all" on public.jobs for update using (true) with check (true);
 
+create table if not exists public.app_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_settings enable row level security;
+
+create policy "app_settings_select_all" on public.app_settings for select using (true);
+create policy "app_settings_insert_all" on public.app_settings for insert with check (true);
+create policy "app_settings_update_all" on public.app_settings for update using (true) with check (true);
+
 create or replace function public.touch_jobs_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -207,13 +263,29 @@ create trigger touch_jobs_updated_at
 before update on public.jobs
 for each row execute function public.touch_jobs_updated_at();
 
-alter publication supabase_realtime add table public.jobs;`;
+create or replace function public.touch_app_settings_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists touch_app_settings_updated_at on public.app_settings;
+create trigger touch_app_settings_updated_at
+before update on public.app_settings
+for each row execute function public.touch_app_settings_updated_at();
+
+alter publication supabase_realtime add table public.jobs;
+alter publication supabase_realtime add table public.app_settings;`;
 
 let client=null;
 let jobs=[];
 let editingId=null;
 let showHistory=false;
 let connected=false;
+let candidateProfile={...defaultCandidateProfile};
+let refreshSettings={...defaultRefreshSettings};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>new Date().toISOString().slice(0,10);
@@ -265,7 +337,7 @@ async function connect(){
   }
   try{
     client=supabase.createClient(cfg.url,cfg.anonKey);
-    await loadJobs();
+    await Promise.all([loadJobs(),loadSettings()]);
     subscribeRealtime();
     connected=true; updateButtons();
     setNotice(`已连接 Supabase。当前加载 ${jobs.length} 条岗位记录，后续变更会实时同步。`,"ok");
@@ -280,21 +352,52 @@ async function loadJobs(){
   jobs=(data||[]).map(fromDb);
   render();
 }
+async function loadSettings(){
+  if(!client) return;
+  const {data,error}=await client.from("app_settings").select("key,value").in("key",["candidate_profile","refresh_settings"]);
+  if(error){
+    candidateProfile={...defaultCandidateProfile};
+    refreshSettings={...defaultRefreshSettings};
+    return;
+  }
+  for(const row of data||[]){
+    if(row.key==="candidate_profile") candidateProfile={...defaultCandidateProfile,...row.value};
+    if(row.key==="refresh_settings") refreshSettings={...defaultRefreshSettings,...row.value};
+  }
+}
 function subscribeRealtime(){
   client.channel("jobs-live")
     .on("postgres_changes",{event:"*",schema:"public",table:"jobs"},()=>loadJobs())
+    .on("postgres_changes",{event:"*",schema:"public",table:"app_settings"},async()=>{await loadSettings();render();})
     .subscribe(status=>{
       if(status==="SUBSCRIBED") setNotice(`已连接 Supabase Realtime。当前 ${jobs.length} 条记录。`,"ok");
     });
+}
+function preferenceScore(j){
+ const text=[j.company,j.role,j.city,j.region,j.skills,j.resume,j.fit].join(" ");
+ const regionWeight=(candidateProfile.locations||[]).reduce((acc,region,idx)=>{acc[region]=Math.max(0,10-idx*2);return acc},{});
+ const roleBonus=(candidateProfile.preferredRoles||[]).some(role=>text.includes(role))?7:0;
+ const hotelBonus=/酒店|文旅|旅游|宾客|服务/.test(text)?5:0;
+ const officeBonus=/行政|运营|项目|助理|商务|管培|综合|内勤|Office|文档|资料/.test(text)?4:0;
+ const excludedPenalty=(candidateProfile.excludedRoles||[]).some(role=>text.includes(role))?-30:0;
+ const inactivePenalty=(j.inactive||j.deleted)?-100:0;
+ return Math.max(0,Math.round((Number(j.matchScore)||0)+(regionWeight[j.region]||0)+roleBonus+hotelBonus+officeBonus+excludedPenalty+inactivePenalty));
 }
 function filtered(){
  const q=$("#search").value.trim().toLowerCase(),st=$("#statusFilter").value,rg=$("#cityFilter").value;
  const regionWeight={山东:8,江苏:5,安徽:3,河南:1};
  return jobs.filter(j=>(showHistory||(!j.inactive&&!j.deleted))&&(!q||[j.company,j.role,j.city,j.skills,j.fit].join(" ").toLowerCase().includes(q))&&(!st||j.status===st)&&(!rg||j.region===rg))
-  .sort((a,b)=>(Number(a.deleted)-Number(b.deleted))||(Number(a.inactive)-Number(b.inactive))||String(b.recommendDate).localeCompare(String(a.recommendDate))||((b.matchScore+(regionWeight[b.region]||0))-(a.matchScore+(regionWeight[a.region]||0))));
+  .sort((a,b)=>(Number(a.deleted)-Number(b.deleted))||(Number(a.inactive)-Number(b.inactive))||String(b.recommendDate).localeCompare(String(a.recommendDate))||(preferenceScore(b)-preferenceScore(a))||((b.matchScore+(regionWeight[b.region]||0))-(a.matchScore+(regionWeight[a.region]||0))));
 }
 function render(){
  const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
+ $("#refreshInfo").innerHTML=[
+  ["刷新频率",refreshSettings.frequency],
+  ["越南时间",refreshSettings.scheduleLocal],
+  ["北京时间",refreshSettings.scheduleBeijing],
+  ["下次刷新",refreshSettings.nextRefresh]
+ ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
+ $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新规则</h2><p>${esc(refreshSettings.candidateTarget)}。末次刷新：${esc(refreshSettings.lastRefresh)}。</p><div class="tag-row"><span class="tag">${esc(candidateProfile.locationNote)}</span><span class="tag">按画像动态排名</span></div></article>`;
  $("#stats").innerHTML=[["有效主榜",active.length,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
  const list=filtered();
  let rank=0;
@@ -305,12 +408,38 @@ function render(){
   <td>${esc(j.skills)}</td>
   <td><ul class="mini-list">${(j.reasons||[]).slice(0,3).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
   <td><ul class="mini-list">${[...(j.risks||[]).slice(0,2),(j.weaknesses||[])[0]].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
-  <td><b>${esc(j.matchScore)}分</b><div class="stars">${"★".repeat(j.rating)}${"☆".repeat(Math.max(0,5-j.rating))}</div></td>
+  <td><b>${esc(preferenceScore(j))}分</b><div class="minor">原始${esc(j.matchScore)}分</div><div class="stars">${"★".repeat(j.rating)}${"☆".repeat(Math.max(0,5-j.rating))}</div></td>
   <td><span class="badge ${j.status==="已投递"?"sent":j.status==="已完成"?"done":""}">${j.deleted?"已删除":esc(j.status)}</span></td>
   <td><a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">${j.inactive?"查看历史公告":"打开投递页"} ↗</a><br><button class="detail-btn" onclick="showDetail('${j.id}')">完整分析</button><br>${j.deleted?`<button class="detail-btn" onclick="restoreJob('${j.id}')">恢复</button>`:j.inactive?"":`<button class="detail-btn" onclick="openEdit('${j.id}')">编辑推进</button><br><button class="detail-btn" style="color:var(--red)" onclick="deleteJob('${j.id}')">删除并保留</button>`}</td>
   <td>推荐：${esc(j.recommendDate)}<div class="minor">推进：${esc(j.progressDate)}</div></td>
   <td>${esc(j.resume)}</td>
  </tr>`).join(""):`<tr><td colspan="11" class="empty">${connected?"Supabase 暂无岗位记录，可点击“初始化示例岗位”。":"等待 Supabase 连接"}</td></tr>`;
+}
+function profileRows(items){
+ return items.map(([k,v])=>`<div class="profile-item"><small>${esc(k)}</small><div>${Array.isArray(v)?v.map(esc).join("、"):esc(v)}</div></div>`).join("");
+}
+function showProfile(){
+ $("#profileBody").innerHTML=`<div class="profile-grid">
+ ${profileRows([
+  ["身份",candidateProfile.genderAge],
+  ["毕业信息",candidateProfile.graduation],
+  ["学校/专业",candidateProfile.school+" / "+candidateProfile.major],
+  ["英语",candidateProfile.english],
+  ["薪资期待",candidateProfile.salary],
+  ["核心目标",candidateProfile.target],
+  ["求职地区",candidateProfile.locationNote],
+  ["优先岗位",candidateProfile.preferredRoles],
+  ["排除岗位",candidateProfile.excludedRoles],
+  ["核心优势",candidateProfile.strengths],
+  ["当前弱点",candidateProfile.risks],
+  ["实习经历",candidateProfile.experience],
+  ["工作偏好",candidateProfile.workStyle],
+  ["刷新规则",refreshSettings.candidateTarget],
+  ["刷新时间",refreshSettings.scheduleLocal+" / "+refreshSettings.scheduleBeijing],
+  ["末次刷新",refreshSettings.lastRefresh]
+ ])}
+ </div>`;
+ profileDialog.showModal();
 }
 async function upsertJob(job){
   if(!connected) return alert("请先连接 Supabase。");
@@ -383,11 +512,16 @@ $("#setupBtn").onclick=()=>{
 $("#seedBtn").onclick=async()=>{
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(seed.map(toDb),{onConflict:"id"});
-  if(error) alert(`初始化失败：${error.message}`);
+  const {error:settingsError}=await client.from("app_settings").upsert([
+    {key:"candidate_profile",value:defaultCandidateProfile},
+    {key:"refresh_settings",value:{...defaultRefreshSettings,lastRefresh:new Date().toLocaleString("zh-CN",{hour12:false})}}
+  ],{onConflict:"key"});
+  if(error||settingsError) alert(`初始化失败：${(error||settingsError).message}`);
   else setNotice(`已将 ${seed.length} 条示例岗位写入 Supabase。所有访问者刷新后会看到同一份数据。`,"ok");
 };
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(jobs,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="求职岗位推进数据-"+today()+".json";a.click();URL.revokeObjectURL(a.href)};
 $("#addBtn").onclick=()=>openEdit();
+$("#profileBtn").onclick=()=>showProfile();
 ["search","statusFilter","cityFilter"].forEach(id=>$("#"+id).addEventListener("input",render));
 $("#historyBtn").onclick=()=>{showHistory=!showHistory;$("#historyBtn").textContent=showHistory?"收起历史岗位":"展开历史岗位";render()};
 $("#schemaSql").textContent=schemaSql;
