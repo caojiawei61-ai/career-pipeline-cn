@@ -51,10 +51,14 @@
     .jobs th:nth-child(1){width:210px}.jobs th:nth-child(2){width:110px}.jobs th:nth-child(3){width:115px}
     .jobs th:nth-child(4){width:135px}.jobs th:nth-child(5),.jobs th:nth-child(6){width:225px}
     .jobs th:nth-child(7){width:90px}.jobs th:nth-child(8){width:105px}.jobs th:nth-child(9){width:125px}.jobs th:nth-child(10){width:105px}.jobs th:nth-child(11){width:190px}
-    th{position:sticky;top:0;z-index:1;background:#edf3ef;color:#536159;text-align:left;padding:12px 11px;font-size:12px;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+    th{position:sticky;top:0;z-index:2;background:#edf3ef;color:#536159;text-align:left;padding:12px 11px;font-size:12px;letter-spacing:.04em;border-bottom:1px solid var(--line)}
+    .jobs th:first-child{left:0;z-index:4;box-shadow:10px 0 14px rgba(35,56,44,.06)}
     td{padding:14px 11px;border-bottom:1px solid #edf1ee;vertical-align:top;font-size:14px}
+    .jobs td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:10px 0 14px rgba(35,56,44,.045)}
     tbody tr:hover{background:#fbfdfb}
+    tbody tr:hover td:first-child{background:#fbfdfb}
     tbody tr.deleted{opacity:.58;background:#f5f5f5}
+    tbody tr.deleted td:first-child{background:#f5f5f5}
     .company{font-weight:800}
     .role{color:var(--green);font-weight:800;margin-top:4px}
     .minor{color:var(--muted);font-size:12px;margin-top:5px}
@@ -82,6 +86,9 @@
     .profile-item{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fbfdfb}
     .profile-item small{display:block;color:var(--muted);font-weight:800;margin-bottom:6px}
     .profile-item div{line-height:1.6}
+    .profile-form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .profile-form label{font-size:12px;color:var(--muted);font-weight:800}
+    .profile-form .field{margin-top:6px}
     .wide{grid-column:1/-1}
     .edit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
     .edit-grid label{font-size:12px;color:var(--muted);font-weight:700}
@@ -197,11 +204,10 @@ const defaultCandidateProfile={
 };
 const defaultRefreshSettings={
   frequency:"每天1次自动刷新",
-  scheduleLocal:"09:30 Asia/Ho_Chi_Minh",
   scheduleBeijing:"10:30 北京时间",
   candidateTarget:"每天抓取20个候选岗位，通过硬性核验后进入推荐主榜",
   lastRefresh:"等待首次 Supabase 同步",
-  nextRefresh:"每日09:30越南时间 / 10:30北京时间"
+  nextRefresh:"每日10:30北京时间"
 };
 const schemaSql=`create table if not exists public.jobs (
   id text primary key,
@@ -362,7 +368,12 @@ async function loadSettings(){
   }
   for(const row of data||[]){
     if(row.key==="candidate_profile") candidateProfile={...defaultCandidateProfile,...row.value};
-    if(row.key==="refresh_settings") refreshSettings={...defaultRefreshSettings,...row.value};
+    if(row.key==="refresh_settings"){
+      refreshSettings={...defaultRefreshSettings,...row.value};
+      delete refreshSettings.scheduleLocal;
+      if(!refreshSettings.scheduleBeijing) refreshSettings.scheduleBeijing=defaultRefreshSettings.scheduleBeijing;
+      if(String(refreshSettings.nextRefresh||"").includes("越南")||String(refreshSettings.nextRefresh||"").includes("Asia/")) refreshSettings.nextRefresh=defaultRefreshSettings.nextRefresh;
+    }
   }
 }
 function subscribeRealtime(){
@@ -393,7 +404,6 @@ function render(){
  const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
  $("#refreshInfo").innerHTML=[
   ["刷新频率",refreshSettings.frequency],
-  ["越南时间",refreshSettings.scheduleLocal],
   ["北京时间",refreshSettings.scheduleBeijing],
   ["下次刷新",refreshSettings.nextRefresh]
  ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
@@ -418,28 +428,52 @@ function render(){
 function profileRows(items){
  return items.map(([k,v])=>`<div class="profile-item"><small>${esc(k)}</small><div>${Array.isArray(v)?v.map(esc).join("、"):esc(v)}</div></div>`).join("");
 }
+const profileFields=[
+ ["label","求职者标签","text"],
+ ["genderAge","身份","text"],
+ ["graduation","毕业年限","text"],
+ ["school","学校","text"],
+ ["major","专业","text"],
+ ["english","英语情况","text"],
+ ["salary","薪资期待","textarea"],
+ ["target","核心目标","textarea"],
+ ["locationNote","求职地区说明","textarea"],
+ ["locations","地区优先级（每行一个，越靠前权重越高）","textarea"],
+ ["preferredRoles","优先岗位（每行一个）","textarea"],
+ ["excludedRoles","排除岗位（每行一个）","textarea"],
+ ["strengths","核心优势（每行一个）","textarea"],
+ ["risks","当前弱点（每行一个）","textarea"],
+ ["experience","实习经历","textarea"],
+ ["workStyle","工作偏好","textarea"]
+];
+function profileValue(k){
+ const value=candidateProfile[k];
+ return Array.isArray(value)?value.join("\n"):(value??"");
+}
 function showProfile(){
- $("#profileBody").innerHTML=`<div class="profile-grid">
- ${profileRows([
-  ["身份",candidateProfile.genderAge],
-  ["毕业信息",candidateProfile.graduation],
-  ["学校/专业",candidateProfile.school+" / "+candidateProfile.major],
-  ["英语",candidateProfile.english],
-  ["薪资期待",candidateProfile.salary],
-  ["核心目标",candidateProfile.target],
-  ["求职地区",candidateProfile.locationNote],
-  ["优先岗位",candidateProfile.preferredRoles],
-  ["排除岗位",candidateProfile.excludedRoles],
-  ["核心优势",candidateProfile.strengths],
-  ["当前弱点",candidateProfile.risks],
-  ["实习经历",candidateProfile.experience],
-  ["工作偏好",candidateProfile.workStyle],
-  ["刷新规则",refreshSettings.candidateTarget],
-  ["刷新时间",refreshSettings.scheduleLocal+" / "+refreshSettings.scheduleBeijing],
-  ["末次刷新",refreshSettings.lastRefresh]
- ])}
- </div>`;
+ $("#profileBody").innerHTML=`<form id="profileForm"><div class="profile-form">
+ ${profileFields.map(([k,label,type])=>{
+   const value=esc(profileValue(k));
+   return `<label class="${type==="textarea"?"span2":""}">${label}${type==="textarea"?`<textarea class="field" name="${k}" rows="3">${value}</textarea>`:`<input class="field" name="${k}" value="${value}">`}</label>`;
+ }).join("")}
+ </div><section class="panel wide" style="margin-top:14px"><h3>推荐刷新规则</h3><p>岗位推荐分和排序会基于这里保存后的最新求职者信息重新计算，并通过 Supabase 同步给所有访问者。</p><div class="profile-grid">${profileRows([["刷新规则",refreshSettings.candidateTarget],["刷新时间",refreshSettings.scheduleBeijing],["末次刷新",refreshSettings.lastRefresh]])}</div></section><div class="modal-actions"><button type="button" class="btn" onclick="profileDialog.close()">取消</button><button class="btn primary" type="submit">保存求职者信息</button></div></form>`;
+ $("#profileForm").addEventListener("submit",saveProfile);
  profileDialog.showModal();
+}
+async function saveProfile(e){
+ e.preventDefault();
+ if(!connected) return alert("请先连接 Supabase 后再保存求职者信息。");
+ const data=Object.fromEntries(new FormData(e.target));
+ const nextProfile={...candidateProfile};
+ for(const [k,v] of Object.entries(data)){
+  nextProfile[k]=["locations","preferredRoles","excludedRoles","strengths","risks"].includes(k)?splitLines(v):v.trim();
+ }
+ const {error}=await client.from("app_settings").upsert([{key:"candidate_profile",value:nextProfile}],{onConflict:"key"});
+ if(error) return alert(`保存失败：${error.message}`);
+ candidateProfile={...defaultCandidateProfile,...nextProfile};
+ profileDialog.close();
+ render();
+ setNotice("求职者信息已保存，推荐分和岗位排序已按最新信息刷新。","ok");
 }
 async function upsertJob(job){
   if(!connected) return alert("请先连接 Supabase。");
