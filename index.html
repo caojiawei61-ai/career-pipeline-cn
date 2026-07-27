@@ -447,10 +447,11 @@ function render(){
  $("#refreshInfo").innerHTML=[
   ["刷新频率",refreshSettings.frequency],
   ["北京时间",refreshSettings.scheduleBeijing],
-  ["最近成功写入",refreshSettings.lastSuccess||refreshSettings.lastRefresh],
+  ["最近检查",refreshSettings.lastRefresh],
+  ["最近成功写入",refreshSettings.lastSuccess||"尚无成功写入记录"],
   ["下次刷新",refreshSettings.nextRefresh]
  ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
- $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新状态</h2><p>${esc(refreshSettings.lastStatus)}。最近成功写入：${esc(refreshSettings.lastSuccess||refreshSettings.lastRefresh)}。</p><div class="tag-row"><span class="tag">抓取${esc(summary.fetched)}个</span><span class="tag">有效${esc(summary.valid)}个</span><span class="tag">新增${esc(summary.added)}个</span><span class="tag">失效${esc(summary.expired)}个</span><span class="tag">排除${esc(summary.excluded)}个</span><span class="tag">待核验${esc(summary.pending)}个</span></div></article>`;
+ $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新状态</h2><p>${esc(refreshSettings.lastStatus)}；最近检查：${esc(refreshSettings.lastRefresh)}；最近成功写入：${esc(refreshSettings.lastSuccess||"尚无成功写入记录")}。</p><div class="tag-row"><span class="tag">抓取${esc(summary.fetched)}个</span><span class="tag">有效${esc(summary.valid)}个</span><span class="tag">新增${esc(summary.added)}个</span><span class="tag">失效${esc(summary.expired)}个</span><span class="tag">排除${esc(summary.excluded)}个</span><span class="tag">待核验${esc(summary.pending)}个</span></div></article>`;
  $("#stats").innerHTML=[["今日新增",todayNew,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
  const list=filtered();
  let rank=0;
@@ -499,7 +500,7 @@ function showProfile(){
    const value=esc(profileValue(k));
    return `<label class="${type==="textarea"?"span2":""}">${label}${type==="textarea"?`<textarea class="field" name="${k}" rows="3">${value}</textarea>`:`<input class="field" name="${k}" value="${value}">`}</label>`;
  }).join("")}
- </div><section class="panel wide" style="margin-top:14px"><h3>推荐刷新规则</h3><p>岗位推荐分和排序会基于这里保存后的最新求职者信息重新计算，并通过 Supabase 同步给所有访问者。</p><div class="profile-grid">${profileRows([["刷新规则",refreshSettings.candidateTarget],["刷新时间",refreshSettings.scheduleBeijing],["最近成功写入",refreshSettings.lastSuccess||refreshSettings.lastRefresh],["刷新状态",refreshSettings.lastStatus]])}</div></section><div class="modal-actions"><button type="button" class="btn" onclick="profileDialog.close()">取消</button><button class="btn primary" type="submit">保存求职者信息</button></div></form>`;
+ </div><section class="panel wide" style="margin-top:14px"><h3>推荐刷新规则</h3><p>岗位推荐分和排序会基于这里保存后的最新求职者信息重新计算，并通过 Supabase 同步给所有访问者。</p><div class="profile-grid">${profileRows([["刷新规则",refreshSettings.candidateTarget],["刷新时间",refreshSettings.scheduleBeijing],["最近检查",refreshSettings.lastRefresh],["最近成功写入",refreshSettings.lastSuccess||"尚无成功写入记录"],["刷新状态",refreshSettings.lastStatus]])}</div></section><div class="modal-actions"><button type="button" class="btn" onclick="profileDialog.close()">取消</button><button class="btn primary" type="submit">保存求职者信息</button></div></form>`;
  $("#profileForm").addEventListener("submit",saveProfile);
  profileDialog.showModal();
 }
