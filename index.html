@@ -46,6 +46,9 @@
     .toolbar{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;grid-template-columns:minmax(220px,1fr) 160px 180px 150px;gap:10px;margin-bottom:14px}
     .field{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:white;color:var(--ink);width:100%}
     .table-card{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+    .section-title{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin:22px 0 10px}
+    .section-title h2{margin:0;font-size:22px}
+    .section-title p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
     .scroll{overflow:auto}
     .jobs{border-collapse:separate;border-spacing:0;width:100%;min-width:1540px;table-layout:fixed}
     .jobs th:nth-child(1){width:210px}.jobs th:nth-child(2){width:110px}.jobs th:nth-child(3){width:115px}
@@ -110,6 +113,7 @@
       <button class="btn" id="seedBtn">初始化示例岗位</button>
       <button class="btn" id="syncStatusBtn">同步刷新状态</button>
       <button class="btn" id="exportBtn">导出当前数据</button>
+      <button class="btn" id="addCandidateBtn">＋ 新增商业候选</button>
       <button class="btn primary" id="addBtn">＋ 新增岗位</button>
       <button class="btn profile-btn" id="profileBtn">求职者信息</button>
     </div>
@@ -119,10 +123,11 @@
   <section class="stats" id="stats"></section>
   <section class="toolbar">
     <input class="field" id="search" placeholder="搜索公司、岗位、城市或技能">
-    <select class="field" id="statusFilter"><option value="">全部状态</option><option>待投递</option><option>已投递</option><option>已完成</option></select>
+    <select class="field" id="statusFilter"><option value="">全部状态</option><option>待投递</option><option>待核验</option><option>已投递</option><option>已完成</option><option>已排除</option></select>
     <select class="field" id="cityFilter"><option value="">全部地区</option><option>山东</option><option>江苏</option><option>安徽</option><option>河南</option></select>
     <button class="btn" id="historyBtn">展开历史岗位</button>
   </section>
+  <div class="section-title"><div><h2>推荐主榜</h2><p>只展示已核验或官方来源中可作为正式投递参考的岗位；商业平台待核验岗位不会直接进入主榜。</p></div></div>
   <section class="table-card">
     <div class="scroll">
       <table class="jobs">
@@ -130,6 +135,17 @@
           <th>总排名 / 公司岗位</th><th>城市 / 薪资</th><th>来源 / 更新</th><th>关键技能</th><th>推荐原因</th><th>风险 / 不匹配项</th><th>匹配</th><th>状态</th><th>投递 / 操作</th><th>推荐 / 推进日期</th><th>简历突出方向</th>
         </tr></thead>
         <tbody id="jobRows"></tbody>
+      </table>
+    </div>
+  </section>
+  <div class="section-title"><div><h2>商业平台待核验候选池</h2><p>Boss直聘、前程无忧、智联、猎聘等来源先进入这里。人工确认正式全职、有效投递入口、社保/劳动合同、非销售后，才能加入主榜。</p></div></div>
+  <section class="table-card">
+    <div class="scroll">
+      <table class="jobs">
+        <thead><tr>
+          <th>候选来源 / 公司岗位</th><th>城市 / 薪资</th><th>来源 / 更新</th><th>关键技能</th><th>初步推荐原因</th><th>待核验风险</th><th>匹配</th><th>状态</th><th>核验 / 操作</th><th>推荐 / 推进日期</th><th>简历突出方向</th>
+        </tr></thead>
+        <tbody id="candidateRows"></tbody>
       </table>
     </div>
   </section>
@@ -302,6 +318,9 @@ const beijingNow=()=>{const p=beijingParts();return `${p.year}-${p.month}-${p.da
 const clampScore=value=>Math.max(0,Math.min(100,Math.round(Number(value)||0)));
 const isSystemId=id=>String(id||"").startsWith("__system_");
 const isMissingAppSettings=error=>String(error?.message||"").includes("public.app_settings")||String(error?.message||"").includes("app_settings");
+const commercialPattern=/boss|boss直聘|前程无忧|51job|智联|猎聘/i;
+const isCommercialSource=j=>commercialPattern.test([j.source,j.url,j.note].join(" "));
+const isPendingCandidate=j=>!j.deleted&&!j.inactive&&(j.status==="待核验"||(/待核验|商业平台候选/.test([j.fit,j.note].join(" "))&&isCommercialSource(j)));
 
 function toDb(j){
   return {
@@ -339,6 +358,7 @@ function getConfig(){
 }
 function updateButtons(){
   $("#addBtn").disabled=!connected;
+  $("#addCandidateBtn").disabled=!connected;
   $("#seedBtn").disabled=!connected;
   $("#syncStatusBtn").disabled=!connected;
 }
@@ -437,11 +457,17 @@ function preferenceScore(j){
 function filtered(){
  const q=$("#search").value.trim().toLowerCase(),st=$("#statusFilter").value,rg=$("#cityFilter").value;
  const regionWeight={山东:8,江苏:5,安徽:3,河南:1};
- return jobs.filter(j=>(showHistory||(!j.inactive&&!j.deleted))&&(!q||[j.company,j.role,j.city,j.skills,j.fit].join(" ").toLowerCase().includes(q))&&(!st||j.status===st)&&(!rg||j.region===rg))
+ return jobs.filter(j=>!isPendingCandidate(j)&&(showHistory||(!j.inactive&&!j.deleted))&&(!q||[j.company,j.role,j.city,j.skills,j.fit].join(" ").toLowerCase().includes(q))&&(!st||j.status===st)&&(!rg||j.region===rg))
   .sort((a,b)=>(Number(a.deleted)-Number(b.deleted))||(Number(a.inactive)-Number(b.inactive))||String(b.recommendDate).localeCompare(String(a.recommendDate))||(preferenceScore(b)-preferenceScore(a))||((b.matchScore+(regionWeight[b.region]||0))-(a.matchScore+(regionWeight[a.region]||0))));
 }
+function candidateList(){
+ const q=$("#search").value.trim().toLowerCase(),st=$("#statusFilter").value,rg=$("#cityFilter").value;
+ return jobs.filter(j=>isPendingCandidate(j)&&(!q||[j.company,j.role,j.city,j.skills,j.fit,j.source].join(" ").toLowerCase().includes(q))&&(!st||j.status===st||!st)&&(!rg||j.region===rg))
+  .sort((a,b)=>String(b.recommendDate).localeCompare(String(a.recommendDate))||(preferenceScore(b)-preferenceScore(a)));
+}
 function render(){
- const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
+ const pending=candidateList();
+ const active=jobs.filter(j=>!isPendingCandidate(j)&&!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
  const todayNew=active.filter(j=>j.recommendDate===today()).length;
  const summary={...defaultRefreshSettings.lastSummary,...(refreshSettings.lastSummary||{})};
  const statusText=String(refreshSettings.lastStatus||"").replace(/[。；;\s]+$/,"");
@@ -453,7 +479,7 @@ function render(){
   ["下次刷新",refreshSettings.nextRefresh]
  ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
  $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新状态</h2><p>${esc(statusText)}；最近检查：${esc(refreshSettings.lastRefresh)}；最近成功写入：${esc(refreshSettings.lastSuccess||"尚无成功写入记录")}。</p><div class="tag-row"><span class="tag">抓取${esc(summary.fetched)}个</span><span class="tag">有效${esc(summary.valid)}个</span><span class="tag">新增${esc(summary.added)}个</span><span class="tag">失效${esc(summary.expired)}个</span><span class="tag">排除${esc(summary.excluded)}个</span><span class="tag">待核验${esc(summary.pending)}个</span></div></article>`;
- $("#stats").innerHTML=[["今日新增",todayNew,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
+ $("#stats").innerHTML=[["今日新增",todayNew,"个"],["商业待核验",pending.length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
  const list=filtered();
  let rank=0;
  $("#jobRows").innerHTML=list.length?list.map(j=>`<tr class="${j.deleted||j.inactive?"deleted":""}">
@@ -467,8 +493,21 @@ function render(){
   <td><span class="badge ${j.status==="已投递"?"sent":j.status==="已完成"?"done":""}">${j.deleted?"已删除":esc(j.status)}</span></td>
   <td><a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">${j.inactive?"查看历史公告":"打开投递页"} ↗</a><br><button class="detail-btn" onclick="showDetail('${j.id}')">完整分析</button><br>${j.deleted?`<button class="detail-btn" onclick="restoreJob('${j.id}')">恢复</button>`:j.inactive?"":`<button class="detail-btn" onclick="openEdit('${j.id}')">编辑推进</button><br><button class="detail-btn" style="color:var(--red)" onclick="deleteJob('${j.id}')">删除并保留</button>`}</td>
   <td>推荐：${esc(j.recommendDate)}<div class="minor">推进：${esc(j.progressDate)}</div></td>
-  <td>${esc(j.resume)}</td>
+ <td>${esc(j.resume)}</td>
  </tr>`).join(""):`<tr><td colspan="11" class="empty">${connected?"Supabase 暂无岗位记录，可点击“初始化示例岗位”。":"等待 Supabase 连接"}</td></tr>`;
+ $("#candidateRows").innerHTML=pending.length?pending.map(j=>`<tr>
+  <td><div class="company">待核验 · ${esc(j.company)}</div><div class="role">${esc(j.role)}</div><div class="minor">${esc(j.fit||"商业平台候选")}</div></td>
+  <td>${esc(j.city)}<div class="minor">${esc(j.salary)}</div></td>
+  <td>${esc(j.source)}<div class="minor">${esc(j.publishDate)}</div></td>
+  <td>${esc(j.skills)}</td>
+  <td><ul class="mini-list">${(j.reasons||[]).slice(0,3).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
+  <td><ul class="mini-list">${[...(j.risks||[]).slice(0,3),...(j.weaknesses||[]).slice(0,1)].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></td>
+  <td><b>${esc(preferenceScore(j))}分</b><div class="minor">暂不进主榜</div></td>
+  <td><span class="badge sent">待核验</span></td>
+  <td><a class="link" href="${esc(j.url)}" target="_blank" rel="noopener">打开详情页 ↗</a><br><button class="detail-btn" onclick="showDetail('${j.id}')">完整分析</button><br><button class="detail-btn" onclick="verifyCandidate('${j.id}')">确认有效进主榜</button><br><button class="detail-btn" style="color:var(--red)" onclick="excludeCandidate('${j.id}')">排除并留档</button><br><button class="detail-btn" onclick="openEdit('${j.id}')">编辑</button></td>
+  <td>推荐：${esc(j.recommendDate)}<div class="minor">推进：${esc(j.progressDate)}</div></td>
+  <td>${esc(j.resume)}</td>
+ </tr>`).join(""):`<tr><td colspan="11" class="empty">暂无商业平台待核验候选。Boss直聘、前程无忧、智联、猎聘岗位请先点击“新增商业候选”，人工核验后再进入主榜。</td></tr>`;
 }
 function profileRows(items){
  return items.map(([k,v])=>`<div class="profile-item"><small>${esc(k)}</small><div>${Array.isArray(v)?v.map(esc).join("、"):esc(v)}</div></div>`).join("");
@@ -541,6 +580,7 @@ async function upsertJob(job){
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(toDb(job),{onConflict:"id"});
   if(error) alert(`保存失败：${error.message}`);
+  else await loadJobs();
 }
 async function deleteJob(id){
   const j=jobs.find(x=>x.id===id);
@@ -551,6 +591,16 @@ async function restoreJob(id){
   const j=jobs.find(x=>x.id===id);
   if(!j) return;
   await upsertJob({...j,deleted:false});
+}
+async function verifyCandidate(id){
+  const j=jobs.find(x=>x.id===id);
+  if(!j) return;
+  await upsertJob({...j,status:"待投递",inactive:false,deleted:false,fit:j.fit&&j.fit!=="商业平台候选，待人工核验"?j.fit:"已人工核验，可进入主榜",note:`${j.note||""}｜人工核验通过：${beijingNow()}；确认正式全职、有效投递入口、社保/劳动合同、非销售后进入主榜。`});
+}
+async function excludeCandidate(id){
+  const j=jobs.find(x=>x.id===id);
+  if(!j) return;
+  await upsertJob({...j,status:"已排除",inactive:true,inactiveReason:"商业平台候选人工核验未通过",note:`${j.note||""}｜人工排除：${beijingNow()}；不进入推荐主榜。`});
 }
 function showDetail(id){
  const j=jobs.find(x=>x.id===id);$("#detailTitle").textContent=j.company+"｜"+j.role;
@@ -573,7 +623,7 @@ function openEdit(id){
   const value=Array.isArray(j[k])?j[k].join("\n"):(j[k]??"");
   let control;
   if(t==="select")control=`<select class="field" name="${k}">${["山东","江苏","安徽","河南"].map(v=>`<option ${j[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
-  else if(t==="selectStatus")control=`<select class="field" name="${k}">${["待投递","已投递","已完成"].map(v=>`<option ${j[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
+ else if(t==="selectStatus")control=`<select class="field" name="${k}">${["待投递","待核验","已投递","已完成","已排除"].map(v=>`<option ${j[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
   else if(t==="textarea")control=`<textarea class="field" name="${k}" rows="3">${esc(value)}</textarea>`;
   else control=`<input class="field" name="${k}" type="${t||"text"}" value="${esc(value)}" ${k==="rating"?'min="1" max="5"':""}>`;
   return `<label class="${cl||""}">${l}${control}</label>`;
@@ -633,6 +683,21 @@ $("#syncStatusBtn").onclick=async()=>{
 };
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(jobs,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="求职岗位推进数据-"+today()+".json";a.click();URL.revokeObjectURL(a.href)};
 $("#addBtn").onclick=()=>openEdit();
+$("#addCandidateBtn").onclick=()=>{
+ editingId=null;
+ const candidate={region:"山东",source:"Boss直聘 / 前程无忧 / 智联 / 猎聘",status:"待核验",rating:3,matchScore:55,recommendDate:today(),progressDate:today(),fit:"商业平台候选，待人工核验",skills:"待解析：岗位职责、Office、沟通协调、岗位核心技能",resume:"待核验后再写入主榜简历突出方向",reasons:["商业平台发现岗位，先进入候选池","标题或城市初步匹配","需人工确认是否正式全职","需人工确认五险/劳动合同","需人工确认不含销售或电话客服"],risks:["需登录或详情页可能限制访问","需确认投递入口仍有效","需确认不是销售包装岗位","需确认五险/五险一金是否为岗位承诺","未人工核验前不进入主榜"],weaknesses:["候选人专业和岗位要求待匹配","需补充岗位关键词","需确认工作制和社保","需确认是否接受无经验","需准备针对性简历"],note:"商业平台候选：仅收集，不代表推荐；人工核验通过后点击“确认有效进主榜”。"};
+ $("#editTitle").textContent="新增商业平台候选";
+ $("#editFields").innerHTML=fields.map(([k,l,t,cl])=>{
+  const value=Array.isArray(candidate[k])?candidate[k].join("\n"):(candidate[k]??"");
+  let control;
+  if(t==="select")control=`<select class="field" name="${k}">${["山东","江苏","安徽","河南"].map(v=>`<option ${candidate[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
+  else if(t==="selectStatus")control=`<select class="field" name="${k}">${["待投递","待核验","已投递","已完成","已排除"].map(v=>`<option ${candidate[k]===v?"selected":""}>${v}</option>`).join("")}</select>`;
+  else if(t==="textarea")control=`<textarea class="field" name="${k}" rows="3">${esc(value)}</textarea>`;
+  else control=`<input class="field" name="${k}" type="${t||"text"}" value="${esc(value)}" ${k==="rating"?'min="1" max="5"':""}>`;
+  return `<label class="${cl||""}">${l}${control}</label>`;
+ }).join("");
+ editDialog.showModal();
+};
 $("#profileBtn").onclick=()=>showProfile();
 ["search","statusFilter","cityFilter"].forEach(id=>$("#"+id).addEventListener("input",render));
 $("#historyBtn").onclick=()=>{showHistory=!showHistory;$("#historyBtn").textContent=showHistory?"收起历史岗位":"展开历史岗位";render()};
