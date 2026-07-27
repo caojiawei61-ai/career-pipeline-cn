@@ -133,7 +133,7 @@
       </table>
     </div>
   </section>
-  <p class="foot">说明：GitHub Pages 只负责展示网页；Supabase 是唯一岗位数据源。新增、编辑、删除都会写入 Supabase，其他在线成员会通过 Realtime 自动看到变化。浏览器只保存 Supabase 连接参数，不保存岗位作为工作数据。</p>
+  <p class="foot">说明：GitHub Pages 只负责展示网页；Supabase 是唯一岗位数据源。新增、编辑、删除都会写入 Supabase，其他在线成员会通过 Realtime 自动看到变化。网页可内置 Supabase Project URL 与 anon public key；浏览器不保存岗位作为工作数据。</p>
 </main>
 
 <dialog id="setupDialog">
@@ -158,7 +158,7 @@
 <dialog id="profileDialog"><div class="modal-head"><div><div class="eyebrow">Candidate Profile</div><h2>求职者信息</h2></div><button class="close" onclick="profileDialog.close()">×</button></div><div class="modal-body" id="profileBody"></div></dialog>
 
 <script>
-const DEFAULT_SUPABASE_URL="";
+const DEFAULT_SUPABASE_URL="https://atofavuxynozbovigopd.supabase.co";
 const DEFAULT_SUPABASE_ANON_KEY="";
 const CONFIG_KEY="careerPipelineSupabaseConfigV1";
 const seed=[
@@ -346,7 +346,7 @@ async function connect(){
   const cfg=getConfig();
   if(!cfg.url||!cfg.anonKey){
     connected=false; updateButtons(); render();
-    setNotice("尚未配置 Supabase。点击“Supabase 设置”，填入 Project URL 和 anon public key 后连接。","error");
+    setNotice(cfg.url?"Supabase Project URL 已内置；还缺 anon public key。点击“Supabase 设置”填入一次即可连接。":"尚未配置 Supabase。点击“Supabase 设置”，填入 Project URL 和 anon public key 后连接。","error");
     return;
   }
   try{
