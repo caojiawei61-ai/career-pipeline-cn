@@ -108,6 +108,7 @@
     <div class="actions">
       <button class="btn" id="setupBtn">Supabase 设置</button>
       <button class="btn" id="seedBtn">初始化示例岗位</button>
+      <button class="btn" id="syncStatusBtn">同步刷新状态</button>
       <button class="btn" id="exportBtn">导出当前数据</button>
       <button class="btn primary" id="addBtn">＋ 新增岗位</button>
       <button class="btn profile-btn" id="profileBtn">求职者信息</button>
@@ -201,7 +202,10 @@ const defaultRefreshSettings={
   frequency:"每天1次自动刷新",
   scheduleBeijing:"10:30 北京时间",
   candidateTarget:"每天抓取20个候选岗位，通过硬性核验后进入推荐主榜",
-  lastRefresh:"等待首次 Supabase 同步",
+  lastRefresh:"尚无成功写入记录",
+  lastSuccess:"尚无成功写入记录",
+  lastStatus:"等待自动刷新写入 Supabase 日志",
+  lastSummary:{fetched:0,valid:0,expired:0,excluded:0,pending:0,added:0},
   nextRefresh:"每日10:30北京时间"
 };
 const schemaSql=`create table if not exists public.jobs (
@@ -292,7 +296,9 @@ const SYSTEM_PROFILE_ID="__system_candidate_profile__";
 const SYSTEM_REFRESH_ID="__system_refresh_settings__";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const today=()=>new Date().toISOString().slice(0,10);
+const beijingParts=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date()).reduce((acc,p)=>{acc[p.type]=p.value;return acc},{});
+const today=()=>{const p=beijingParts();return `${p.year}-${p.month}-${p.day}`;};
+const beijingNow=()=>{const p=beijingParts();return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second} 北京时间`;};
 const clampScore=value=>Math.max(0,Math.min(100,Math.round(Number(value)||0)));
 const isSystemId=id=>String(id||"").startsWith("__system_");
 const isMissingAppSettings=error=>String(error?.message||"").includes("public.app_settings")||String(error?.message||"").includes("app_settings");
@@ -334,6 +340,7 @@ function getConfig(){
 function updateButtons(){
   $("#addBtn").disabled=!connected;
   $("#seedBtn").disabled=!connected;
+  $("#syncStatusBtn").disabled=!connected;
 }
 async function connect(){
   const cfg=getConfig();
@@ -381,6 +388,7 @@ function applySettingsRows(rows){
     if(row.key==="candidate_profile") candidateProfile={...defaultCandidateProfile,...row.value};
     if(row.key==="refresh_settings"){
       refreshSettings={...defaultRefreshSettings,...row.value};
+      refreshSettings.lastSummary={...defaultRefreshSettings.lastSummary,...(row.value?.lastSummary||{})};
       delete refreshSettings.scheduleLocal;
       if(!refreshSettings.scheduleBeijing) refreshSettings.scheduleBeijing=defaultRefreshSettings.scheduleBeijing;
       if(String(refreshSettings.nextRefresh||"").includes("越南")||String(refreshSettings.nextRefresh||"").includes("Asia/")) refreshSettings.nextRefresh=defaultRefreshSettings.nextRefresh;
@@ -398,6 +406,7 @@ async function loadSettingsFromJobs(){
       if(row.id===SYSTEM_PROFILE_ID) candidateProfile={...defaultCandidateProfile,...value};
       if(row.id===SYSTEM_REFRESH_ID){
         refreshSettings={...defaultRefreshSettings,...value};
+        refreshSettings.lastSummary={...defaultRefreshSettings.lastSummary,...(value.lastSummary||{})};
         delete refreshSettings.scheduleLocal;
         if(!refreshSettings.scheduleBeijing) refreshSettings.scheduleBeijing=defaultRefreshSettings.scheduleBeijing;
         if(String(refreshSettings.nextRefresh||"").includes("越南")||String(refreshSettings.nextRefresh||"").includes("Asia/")) refreshSettings.nextRefresh=defaultRefreshSettings.nextRefresh;
@@ -434,12 +443,14 @@ function filtered(){
 function render(){
  const active=jobs.filter(j=>!j.deleted&&!j.inactive),sent=active.filter(j=>j.status==="已投递").length;
  const todayNew=active.filter(j=>j.recommendDate===today()).length;
+ const summary={...defaultRefreshSettings.lastSummary,...(refreshSettings.lastSummary||{})};
  $("#refreshInfo").innerHTML=[
   ["刷新频率",refreshSettings.frequency],
   ["北京时间",refreshSettings.scheduleBeijing],
+  ["最近成功写入",refreshSettings.lastSuccess||refreshSettings.lastRefresh],
   ["下次刷新",refreshSettings.nextRefresh]
  ].map(([k,v])=>`<span class="pill">${esc(k)} <strong>${esc(v)}</strong></span>`).join("");
- $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新规则</h2><p>${esc(refreshSettings.candidateTarget)}。末次刷新：${esc(refreshSettings.lastRefresh)}。</p><div class="tag-row"><span class="tag">${esc(candidateProfile.locationNote)}</span><span class="tag">按画像动态排名</span></div></article>`;
+ $("#profileBand").innerHTML=`<article class="profile-card"><h2>${esc(candidateProfile.label)}｜${esc(candidateProfile.graduation)}</h2><p>${esc(candidateProfile.school)} · ${esc(candidateProfile.major)} · ${esc(candidateProfile.genderAge)}。目标：${esc(candidateProfile.target)}。</p><div class="tag-row">${[...(candidateProfile.preferredRoles||[]).slice(0,6),...(candidateProfile.locations||[]).slice(0,4)].map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div></article><article class="profile-card"><h2>刷新状态</h2><p>${esc(refreshSettings.lastStatus)}。最近成功写入：${esc(refreshSettings.lastSuccess||refreshSettings.lastRefresh)}。</p><div class="tag-row"><span class="tag">抓取${esc(summary.fetched)}个</span><span class="tag">有效${esc(summary.valid)}个</span><span class="tag">新增${esc(summary.added)}个</span><span class="tag">失效${esc(summary.expired)}个</span><span class="tag">排除${esc(summary.excluded)}个</span><span class="tag">待核验${esc(summary.pending)}个</span></div></article>`;
  $("#stats").innerHTML=[["今日新增",todayNew,"个"],["高优先",active.filter(j=>j.matchScore>=80).length,"个"],["待投递",active.filter(j=>j.status==="待投递").length,"个"],["已投递",sent,"个"],["失效 / 删除",jobs.filter(j=>j.inactive||j.deleted).length,"个"]].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><span>${x[2]}</span></div>`).join("");
  const list=filtered();
  let rank=0;
@@ -488,7 +499,7 @@ function showProfile(){
    const value=esc(profileValue(k));
    return `<label class="${type==="textarea"?"span2":""}">${label}${type==="textarea"?`<textarea class="field" name="${k}" rows="3">${value}</textarea>`:`<input class="field" name="${k}" value="${value}">`}</label>`;
  }).join("")}
- </div><section class="panel wide" style="margin-top:14px"><h3>推荐刷新规则</h3><p>岗位推荐分和排序会基于这里保存后的最新求职者信息重新计算，并通过 Supabase 同步给所有访问者。</p><div class="profile-grid">${profileRows([["刷新规则",refreshSettings.candidateTarget],["刷新时间",refreshSettings.scheduleBeijing],["末次刷新",refreshSettings.lastRefresh]])}</div></section><div class="modal-actions"><button type="button" class="btn" onclick="profileDialog.close()">取消</button><button class="btn primary" type="submit">保存求职者信息</button></div></form>`;
+ </div><section class="panel wide" style="margin-top:14px"><h3>推荐刷新规则</h3><p>岗位推荐分和排序会基于这里保存后的最新求职者信息重新计算，并通过 Supabase 同步给所有访问者。</p><div class="profile-grid">${profileRows([["刷新规则",refreshSettings.candidateTarget],["刷新时间",refreshSettings.scheduleBeijing],["最近成功写入",refreshSettings.lastSuccess||refreshSettings.lastRefresh],["刷新状态",refreshSettings.lastStatus]])}</div></section><div class="modal-actions"><button type="button" class="btn" onclick="profileDialog.close()">取消</button><button class="btn primary" type="submit">保存求职者信息</button></div></form>`;
  $("#profileForm").addEventListener("submit",saveProfile);
  profileDialog.showModal();
 }
@@ -596,10 +607,27 @@ $("#seedBtn").onclick=async()=>{
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(seed.map(toDb),{onConflict:"id"});
   const {error:profileError}=await saveSetting("candidate_profile",defaultCandidateProfile);
-  const {error:refreshError}=await saveSetting("refresh_settings",{...defaultRefreshSettings,lastRefresh:new Date().toLocaleString("zh-CN",{hour12:false})});
+  const {error:refreshError}=await saveSetting("refresh_settings",{...defaultRefreshSettings,lastRefresh:beijingNow(),lastSuccess:beijingNow(),lastStatus:`已初始化 ${seed.length} 条示例岗位`,lastSummary:{fetched:seed.length,valid:seed.filter(j=>!j.deleted&&!j.inactive).length,expired:seed.filter(j=>j.inactive).length,excluded:0,pending:0,added:seed.length}});
   const settingsError=profileError||refreshError;
   if(error||settingsError) alert(`初始化失败：${(error||settingsError).message}`);
   else setNotice(`已将 ${seed.length} 条示例岗位写入 Supabase。所有访问者刷新后会看到同一份数据。`,"ok");
+};
+$("#syncStatusBtn").onclick=async()=>{
+  if(!connected) return alert("请先连接 Supabase。");
+  const active=jobs.filter(j=>!j.deleted&&!j.inactive);
+  const todayNew=active.filter(j=>j.recommendDate===today()).length;
+  const nextSettings={
+    ...defaultRefreshSettings,
+    ...refreshSettings,
+    lastRefresh:beijingNow(),
+    lastStatus:`已同步页面刷新状态：本次仅记录状态，未执行岗位抓取；北京时间今日新增 ${todayNew} 个。`,
+    lastSummary:{fetched:0,valid:0,expired:0,excluded:0,pending:0,added:todayNew}
+  };
+  const {error}=await saveSetting("refresh_settings",nextSettings);
+  if(error) return alert(`同步失败：${error.message}`);
+  refreshSettings=nextSettings;
+  render();
+  setNotice("刷新状态已写入 Supabase。注意：这不是岗位抓取，只是记录当前页面状态。","ok");
 };
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(jobs,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="求职岗位推进数据-"+today()+".json";a.click();URL.revokeObjectURL(a.href)};
 $("#addBtn").onclick=()=>openEdit();
