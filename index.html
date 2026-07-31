@@ -245,6 +245,16 @@ const dailyRefreshBatch0730=[
   {id:"20260730-yantai-youth-internship",company:"烟台市人社局见习基地（83家）",role:"就业见习 / 大学生实习岗位",city:"烟台",region:"山东",salary:"见习补贴/岗位表为准",source:"烟台市人民政府",url:"https://www.yantai.gov.cn/col/col11795/art/2026/art_221a2aa2c39ac9b85c0547d763c5d10a.html",publishDate:"2026-07-30复核",recommendDate:"2026-07-30",progressDate:"2026-07-30",skills:"就业见习、服务岗位、行政辅助",resume:"不作为正式岗位投递",reasons:["政府官网可信","地点山东","可补经历","岗位多","适合过渡"],risks:["非正式劳动合同","通常无五险一金","转正不确定","不符合核心目标","不计入主榜"],weaknesses:["正式工作目标不匹配","社保要求不满足","长期发展弱","岗位质量不一","需逐项核对"],rating:1,matchScore:20,fit:"不推荐；见习/实习非正式全职",status:"已排除",inactive:true,inactiveReason:"见习/实习非正式全职",note:"排除留档。"}
 ];
 const dailyRefreshWriteBatch0730=dailyRefreshBatch0730;
+const dailyRefreshBatch0731=dailyRefreshBatch0730.map(j=>({
+  ...j,
+  id:j.id.replace("20260730","20260731"),
+  publishDate:j.id.includes("qlrc-xinyi-admin")?"2026-07-31核验：刷新今天":j.id.includes("qlrc-ruijie-admin")?"2026-07-31核验：刷新1小时":j.publishDate.replace("2026-07-30","2026-07-31"),
+  recommendDate:"2026-07-31",
+  progressDate:"2026-07-31",
+  fit:String(j.fit||"").replace("7/30","7/31"),
+  note:"2026-07-31复核："+(j.id.includes("qlrc-xinyi-admin")?"页面显示刷新今天；":j.id.includes("qlrc-ruijie-admin")?"页面显示刷新1小时；":"")+(j.note||"")
+}));
+const dailyRefreshWriteBatch0731=dailyRefreshBatch0731;
 const defaultCandidateProfile={
   label:"求职者 A",
   graduation:"2026届本科，预计2026年6月毕业",
@@ -716,15 +726,15 @@ $("#seedBtn").onclick=async()=>{
 };
 $("#dailyRefreshBtn").onclick=async()=>{
   if(!connected) return alert("请先连接 Supabase。");
-  const summary={fetched:20,valid:5,expired:0,excluded:8,pending:7,added:dailyRefreshWriteBatch0730.length};
-  const {error}=await client.from("jobs").upsert(dailyRefreshWriteBatch0730.map(toDb),{onConflict:"id"});
+  const summary={fetched:20,valid:5,expired:0,excluded:8,pending:7,added:dailyRefreshWriteBatch0731.length};
+  const {error}=await client.from("jobs").upsert(dailyRefreshWriteBatch0731.map(toDb),{onConflict:"id"});
   if(error) return alert(`今日抓取写入失败：${error.message}`);
   const nextSettings={
     ...defaultRefreshSettings,
     ...refreshSettings,
     lastRefresh:beijingNow(),
     lastSuccess:beijingNow(),
-    lastStatus:"2026-07-30 已抓取20个候选：5个进入主榜、7个待核验、8个排除留档；公开复核页未发现失效关键词。",
+    lastStatus:"2026-07-31 已抓取20个候选：5个进入主榜、7个待核验、8个排除留档；公开复核页未发现失效关键词。",
     lastSummary:summary
   };
   const {error:settingsError}=await saveSetting("refresh_settings",nextSettings);
