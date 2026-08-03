@@ -26,6 +26,9 @@
     .btn.primary{background:var(--green);color:white;border-color:var(--green)}
     .btn.danger{color:var(--red)}
     .btn:disabled{opacity:.45;cursor:not-allowed}
+    .admin-only{display:none!important}
+    body.admin-mode .admin-only{display:inline-flex!important}
+    .auth-badge{background:#fffdf5;border-color:#e7d7a8;color:#735019}
     .notice{background:#fff8e8;border:1px solid #eed9a4;border-radius:8px;padding:12px 16px;color:#735019;font-size:14px;margin-bottom:18px}
     .notice.ok{background:#e8f4ed;border-color:#c9dfd2;color:#1d6b4d}
     .notice.error{background:#fff0f0;border-color:#efc4c4;color:#8b2f2f}
@@ -109,13 +112,14 @@
       <div class="hero-meta" id="refreshInfo"></div>
     </div>
     <div class="actions">
-      <button class="btn" id="setupBtn">Supabase 设置</button>
-      <button class="btn" id="seedBtn">初始化示例岗位</button>
-      <button class="btn" id="dailyRefreshBtn">写入今日抓取</button>
-      <button class="btn" id="syncStatusBtn">同步刷新状态</button>
+      <button class="btn auth-badge" id="adminBtn">管理员登录</button>
+      <button class="btn admin-only" id="setupBtn">Supabase 设置</button>
+      <button class="btn admin-only" id="seedBtn">初始化示例岗位</button>
+      <button class="btn admin-only" id="dailyRefreshBtn">写入今日抓取</button>
+      <button class="btn admin-only" id="syncStatusBtn">同步刷新状态</button>
       <button class="btn" id="exportBtn">导出当前数据</button>
-      <button class="btn" id="addCandidateBtn">＋ 新增商业候选</button>
-      <button class="btn primary" id="addBtn">＋ 新增岗位</button>
+      <button class="btn admin-only" id="addCandidateBtn">＋ 新增商业候选</button>
+      <button class="btn primary admin-only" id="addBtn">＋ 新增岗位</button>
       <button class="btn profile-btn" id="profileBtn">求职者信息</button>
     </div>
   </header>
@@ -176,8 +180,10 @@
 
 <script>
 const DEFAULT_SUPABASE_URL="https://atofavuxynozbovigopd.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY="";
+const DEFAULT_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0b2ZhdnV4eW5vemJvdmlnb3BkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTY1MDYsImV4cCI6MjEwMDQzMjUwNn0.DoL3OBOAZp9zQE2ZvdUwNzkf1vszVRLq8Bf5r96_ZFs";
 const CONFIG_KEY="careerPipelineSupabaseConfigV1";
+const ADMIN_SESSION_KEY="careerPipelineAdminSessionV1";
+const ADMIN_PASSWORD="123567";
 const seed=[
  {id:"henan-shuotu-admin-20260724",company:"河南硕图教育科技有限公司",role:"行政文员（教育行业·不加班）",city:"河南·郑州",region:"河南",salary:"页面为准",source:"工作啦大学生直聘",url:"https://www.goworkla.cn/Position/PositionDetail?positionid=686cc3a6b86d17bbbc007575",publishDate:"2026-07-08发布·2026-07-24核验",recommendDate:"2026-07-24",skills:"行政文件、资料归档、Office、沟通协调、会议支持",resume:"突出Word/Excel/PPT熟练、责任心、服务意识；将酒店助理实习改写为资料整理、现场协调和客户沟通案例",reasons:["毕业生入职30天内签订劳动合同","页面明确次月缴纳五险","行政方向不限制旅游管理专业","不加班且工作节奏相对可控","沟通、服务意识和Office可直接迁移"],risks:["五险并非入职当日缴纳","页面未明确住房公积金","需确认是否双休","教培行业稳定性需核验","需确认岗位不承担招生或销售指标"],weaknesses:["缺少正式行政实习","文书写作案例不足","Excel高级功能需补强","需要解释跨专业求职动机","没有校园组织经历"],rating:5,matchScore:89,fit:"正式工作重点推荐",status:"待投递",progressDate:"2026-07-24",note:"有效投递页面；投递前书面确认无招生、电话营销或业绩指标，并确认休息制度。",deleted:false},
  {id:"pingan-henan-ns-20260724",company:"中国平安人寿保险股份有限公司河南分公司",role:"NS管培生（经营分析）",city:"河南·郑州",region:"河南",salary:"公告为准",source:"河南农业大学就业信息",url:"https://gj.henau.edu.cn/index.php?c=show&id=2948",publishDate:"2026年校招·2026-07-24核验",recommendDate:"2026-07-24",skills:"经营分析、数据整理、报告撰写、跨部门沟通、Office",resume:"突出Excel数据整理、PPT汇报、责任心和沟通表达；准备一份酒店运营数据或服务改进分析案例",reasons:["面向2026届毕业生","入司即签订劳动合同","明确缴纳六险二金","经营分析属于职能岗而非保险销售","正式员工待遇与培养路径清晰"],risks:["保险行业需确认最终定岗","可能存在业务部门轮岗","对数据分析能力要求较高","竞争者可能具备金融统计背景","需确认不承担销售或代理人增员指标"],weaknesses:["专业不是金融或统计","缺少数据分析项目","英语四级未通过","实习时间较短","校园经历较少"],rating:4,matchScore:81,fit:"正式职能岗推荐",status:"待投递",progressDate:"2026-07-24",note:"仅推荐经营分析等内勤职能方向；如面试出现销售、组训、增员或业绩指标，立即退出。",deleted:false},
@@ -367,6 +373,7 @@ let connected=false;
 let settingsStorage="app_settings";
 let candidateProfile={...defaultCandidateProfile};
 let refreshSettings={...defaultRefreshSettings};
+let isAdmin=sessionStorage.getItem(ADMIN_SESSION_KEY)==="true";
 const SYSTEM_PROFILE_ID="__system_candidate_profile__";
 const SYSTEM_REFRESH_ID="__system_refresh_settings__";
 const $=s=>document.querySelector(s);
@@ -415,18 +422,36 @@ function getConfig(){
   const saved=JSON.parse(localStorage.getItem(CONFIG_KEY)||"{}");
   return {url:DEFAULT_SUPABASE_URL||saved.url||"", anonKey:DEFAULT_SUPABASE_ANON_KEY||saved.anonKey||""};
 }
+function applyAdminVisibility(){
+  document.body.classList.toggle("admin-mode",isAdmin);
+  const adminTexts=["Supabase 设置","初始化示例岗位","写入今日抓取","同步刷新状态","＋ 新增商业候选","＋ 新增岗位","编辑推进","删除并保留","恢复","确认有效进主榜","排除并留档","编辑"];
+  document.querySelectorAll("button").forEach(btn=>{
+    const text=btn.textContent.trim();
+    if(adminTexts.includes(text)) btn.classList.add("admin-only");
+  });
+  const adminBtn=$("#adminBtn");
+  if(adminBtn) adminBtn.textContent=isAdmin?"管理员模式：退出":"管理员登录";
+}
 function updateButtons(){
-  $("#addBtn").disabled=!connected;
-  $("#addCandidateBtn").disabled=!connected;
-  $("#seedBtn").disabled=!connected;
-  $("#dailyRefreshBtn").disabled=!connected;
-  $("#syncStatusBtn").disabled=!connected;
+  applyAdminVisibility();
+  const canWrite=connected&&isAdmin;
+  $("#setupBtn").disabled=!isAdmin;
+  $("#addBtn").disabled=!canWrite;
+  $("#addCandidateBtn").disabled=!canWrite;
+  $("#seedBtn").disabled=!canWrite;
+  $("#dailyRefreshBtn").disabled=!canWrite;
+  $("#syncStatusBtn").disabled=!canWrite;
+}
+function requireAdmin(){
+  if(isAdmin) return true;
+  alert("当前是只读模式。请先点击“管理员登录”并输入管理员密码后再编辑。普通访问者无需输入 Supabase key。");
+  return false;
 }
 async function connect(){
   const cfg=getConfig();
   if(!cfg.url||!cfg.anonKey){
     connected=false; updateButtons(); render();
-    setNotice(cfg.url?"Supabase Project URL 已内置；还缺 anon public key。点击“Supabase 设置”填入一次即可连接。":"尚未配置 Supabase。点击“Supabase 设置”，填入 Project URL 和 anon public key 后连接。","error");
+    setNotice(cfg.url?"Supabase Project URL 已内置；还缺 anon public key。请联系管理员检查网页配置。":"尚未配置 Supabase。请联系管理员检查网页配置。","error");
     return;
   }
   try{
@@ -568,6 +593,7 @@ function render(){
   <td>推荐：${esc(j.recommendDate)}<div class="minor">推进：${esc(j.progressDate)}</div></td>
   <td>${esc(j.resume)}</td>
  </tr>`).join(""):`<tr><td colspan="11" class="empty">暂无商业平台待核验候选。Boss直聘、前程无忧、智联、猎聘岗位请先点击“新增商业候选”，人工核验后再进入主榜。</td></tr>`;
+ applyAdminVisibility();
 }
 function profileRows(items){
  return items.map(([k,v])=>`<div class="profile-item"><small>${esc(k)}</small><div>${Array.isArray(v)?v.map(esc).join("、"):esc(v)}</div></div>`).join("");
@@ -606,6 +632,7 @@ function showProfile(){
 }
 async function saveProfile(e){
  e.preventDefault();
+ if(!requireAdmin()) return;
  if(!connected) return alert("请先连接 Supabase 后再保存求职者信息。");
  const data=Object.fromEntries(new FormData(e.target));
  const nextProfile={...candidateProfile};
@@ -637,6 +664,7 @@ async function saveSetting(key,value){
  return {error};
 }
 async function upsertJob(job){
+  if(!requireAdmin()) return;
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(toDb(job),{onConflict:"id"});
   if(error) alert(`保存失败：${error.message}`);
@@ -677,6 +705,7 @@ const fields=[
  ["skills","关键技能要求","textarea","span3"],["resume","简历突出方向","textarea","span3"],["reasons","推荐原因（每行一条）","textarea","span3"],["risks","风险/不匹配项（每行一条）","textarea","span3"],["weaknesses","候选人弱点（每行一条）","textarea","span3"],["note","备注","textarea","span3"]
 ];
 function openEdit(id){
+ if(!requireAdmin()) return;
  editingId=id||null;const j=id?jobs.find(x=>x.id===id):{region:"山东",status:"待投递",rating:3,matchScore:60,recommendDate:today(),progressDate:today(),reasons:["待补充","待补充","待补充","待补充","待补充"],risks:["待核验","待核验","待核验","待核验","待核验"],weaknesses:["待评估","待评估","待评估","待评估","待评估"]};
  $("#editTitle").textContent=id?"编辑岗位推进":"新增岗位";
  $("#editFields").innerHTML=fields.map(([k,l,t,cl])=>{
@@ -703,12 +732,32 @@ $("#jobForm").addEventListener("submit",async e=>{
 });
 $("#setupForm").addEventListener("submit",async e=>{
  e.preventDefault();
+ if(!requireAdmin()) return;
  const cfg=Object.fromEntries(new FormData(e.target));
  localStorage.setItem(CONFIG_KEY,JSON.stringify({url:cfg.url.trim(),anonKey:cfg.anonKey.trim()}));
  setupDialog.close();
  await connect();
 });
+$("#adminBtn").onclick=()=>{
+ if(isAdmin){
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  isAdmin=false;
+  updateButtons();
+  setNotice("已退出管理员模式。当前为只读模式。","ok");
+  return;
+ }
+ const input=prompt("请输入管理员密码");
+ if(input===ADMIN_PASSWORD){
+  sessionStorage.setItem(ADMIN_SESSION_KEY,"true");
+  isAdmin=true;
+  updateButtons();
+  setNotice("已进入管理员模式。可以新增、编辑、删除和同步岗位。","ok");
+ }else if(input!==null){
+  alert("管理员密码错误。");
+ }
+};
 $("#setupBtn").onclick=()=>{
+ if(!requireAdmin()) return;
  const cfg=getConfig();
  $("#setupForm").elements.url.value=cfg.url;
  $("#setupForm").elements.anonKey.value=cfg.anonKey;
@@ -716,6 +765,7 @@ $("#setupBtn").onclick=()=>{
  setupDialog.showModal();
 };
 $("#seedBtn").onclick=async()=>{
+  if(!requireAdmin()) return;
   if(!connected) return alert("请先连接 Supabase。");
   const {error}=await client.from("jobs").upsert(seed.map(toDb),{onConflict:"id"});
   const {error:profileError}=await saveSetting("candidate_profile",defaultCandidateProfile);
@@ -725,6 +775,7 @@ $("#seedBtn").onclick=async()=>{
   else setNotice(`已将 ${seed.length} 条示例岗位写入 Supabase。所有访问者刷新后会看到同一份数据。`,"ok");
 };
 $("#dailyRefreshBtn").onclick=async()=>{
+  if(!requireAdmin()) return;
   if(!connected) return alert("请先连接 Supabase。");
   const summary={fetched:20,valid:5,expired:0,excluded:8,pending:7,added:dailyRefreshWriteBatch0731.length};
   const {error}=await client.from("jobs").upsert(dailyRefreshWriteBatch0731.map(toDb),{onConflict:"id"});
@@ -745,6 +796,7 @@ $("#dailyRefreshBtn").onclick=async()=>{
   setNotice("今日抓取结果已写入 Supabase：5个主榜、7个待核验、8个排除留档。所有访问者会实时同步。","ok");
 };
 $("#syncStatusBtn").onclick=async()=>{
+  if(!requireAdmin()) return;
   if(!connected) return alert("请先连接 Supabase。");
   const active=jobs.filter(j=>!j.deleted&&!j.inactive);
   const todayNew=active.filter(j=>j.recommendDate===today()).length;
@@ -764,6 +816,7 @@ $("#syncStatusBtn").onclick=async()=>{
 $("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(jobs,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="求职岗位推进数据-"+today()+".json";a.click();URL.revokeObjectURL(a.href)};
 $("#addBtn").onclick=()=>openEdit();
 $("#addCandidateBtn").onclick=()=>{
+ if(!requireAdmin()) return;
  editingId=null;
  const candidate={region:"山东",source:"Boss直聘 / 前程无忧 / 智联 / 猎聘",status:"待核验",rating:3,matchScore:55,recommendDate:today(),progressDate:today(),fit:"商业平台候选，待人工核验",skills:"待解析：岗位职责、Office、沟通协调、岗位核心技能",resume:"待核验后再写入主榜简历突出方向",reasons:["商业平台发现岗位，先进入候选池","标题或城市初步匹配","需人工确认是否正式全职","需人工确认五险/劳动合同","需人工确认不含销售或电话客服"],risks:["需登录或详情页可能限制访问","需确认投递入口仍有效","需确认不是销售包装岗位","需确认五险/五险一金是否为岗位承诺","未人工核验前不进入主榜"],weaknesses:["候选人专业和岗位要求待匹配","需补充岗位关键词","需确认工作制和社保","需确认是否接受无经验","需准备针对性简历"],note:"商业平台候选：仅收集，不代表推荐；人工核验通过后点击“确认有效进主榜”。"};
  $("#editTitle").textContent="新增商业平台候选";
